@@ -1,0 +1,186 @@
+//#include "drivers.h"
+//#include "common.h"
+
+
+#include "drivers.h"
+#include "common.h"
+#include "tmath.h"
+
+Terminal terminal;
+Timer timer;
+
+
+
+uint32_t g_random_val;
+
+uint32_t get_random()
+{
+    g_random_val = (uint32_t)1103515245*g_random_val + 12345;
+    return g_random_val;
+}
+
+
+
+void beeper_init()
+{
+    // Enable GPIOA clock
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+
+    // Configure PA6 as alternate function (AF9), push-pull, high speed
+    LL_GPIO_InitTypeDef gpio_init = {0};
+    gpio_init.Pin = LL_GPIO_PIN_6;
+    gpio_init.Mode = LL_GPIO_MODE_ALTERNATE;
+    gpio_init.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+    gpio_init.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    gpio_init.Pull = LL_GPIO_PULL_NO;
+    gpio_init.Alternate = LL_GPIO_AF_9; // TIM13_CH1
+    LL_GPIO_Init(GPIOA, &gpio_init);
+
+
+
+    // Enable TIM13 clock
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM13);
+
+    // Timer base configuration
+    LL_TIM_SetPrescaler(TIM13, 134);      // Prescaler = 134
+    LL_TIM_SetAutoReload(TIM13, 999);     // ARR = 999
+    LL_TIM_SetCounterMode(TIM13, LL_TIM_COUNTERMODE_UP);
+    LL_TIM_EnableARRPreload(TIM13);
+
+    // PWM Mode 1 on CH1
+    LL_TIM_OC_SetMode(TIM13, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
+    LL_TIM_OC_SetCompareCH1(TIM13, 0);  // 50% duty cycle initially
+    LL_TIM_OC_EnablePreload(TIM13, LL_TIM_CHANNEL_CH1);
+    //LL_TIM_OC_SetPolarityCH1(TIM13, LL_TIM_OCPOLARITY_HIGH);
+    LL_TIM_CC_EnableChannel(TIM13, LL_TIM_CHANNEL_CH1);
+
+    // Enable main output (MOE) if needed (only necessary on advanced timers, TIM13 is not)
+    // LL_TIM_EnableAllOutputs(TIM13); // Not needed for TIM13
+
+    // Enable counter
+    LL_TIM_EnableCounter(TIM13);
+    LL_TIM_GenerateEvent_UPDATE(TIM13);
+}
+
+
+void beep()
+{
+    LL_TIM_OC_SetCompareCH1(TIM13, 500);
+    timer.delay_ms(200);
+    LL_TIM_OC_SetCompareCH1(TIM13, 0);
+}
+
+
+int main() 
+{        
+    drivers_init();  
+    uart_init();
+
+    terminal << "\n\nuart init done\n";
+    
+
+    timer.init();
+
+  
+    Gpio<'B', 0, GPIO_MODE_OUT> led_0;
+    Gpio<'C', 4, GPIO_MODE_OUT> led_1;
+    Gpio<'A', 7, GPIO_MODE_OUT> led_2;
+
+    Gpio<'A', 0, GPIO_MODE_OUT> led_3;
+    Gpio<'A', 1, GPIO_MODE_OUT> led_4;
+    Gpio<'A', 2, GPIO_MODE_OUT> led_5;
+
+    led_0 = 1;
+    led_1 = 1;
+    led_2 = 1;
+
+    led_3 = 1;
+    led_4 = 1;
+    led_5 = 1;
+
+
+    beeper_init();
+
+  
+    
+    
+    while (1)
+    {
+        uint8_t v = (get_random() >> 8);
+
+        if (v&(1<<0))
+        {
+            led_0 = 1;    
+        }
+        else
+        {
+            led_0 = 0;
+        }
+
+        if (v&(1<<1))
+        {
+            led_1 = 1;    
+        }
+        else
+        {
+            led_1 = 0;
+        }
+
+        if (v&(1<<2))
+        {
+            led_2 = 1;    
+        }
+        else
+        {
+            led_2 = 0;
+        }
+
+
+
+        if (v&(1<<3))
+        {
+            led_3 = 1;    
+        }
+        else
+        {
+            led_3 = 0;
+        }
+
+
+        if (v&(1<<4))
+        {
+            led_4 = 1;    
+        }
+        else
+        {
+            led_4 = 0;
+        }
+
+
+        if (v&(1<<5))
+        {
+            led_5 = 1;    
+        }
+        else
+        {
+            led_5 = 0;
+        }
+
+
+
+        if (v&(1<<7))
+        {
+            beep();
+        }
+
+       
+        uint32_t time = timer.get_time()/1000;
+       
+        terminal << "uptime = " << time << "\n";
+       
+        timer.delay_ms(500);
+    }
+    
+    
+    return 0;
+}
