@@ -1,6 +1,8 @@
 #include "libs_drivers.h"
 #include "tests.h"
 
+#include "turbine.h"
+
 int main()
 {
 
@@ -26,6 +28,38 @@ int main()
     led_5 = 1;
 
 
+    Gpio<'B', 2, GPIO_MODE_IN_PULLUP> key_0;
+
+    turbine_init();
+
+    uint32_t time_out = 0;
+
+    while (1)
+    {
+        if (key_0 == 0)
+        {
+            led_0 = 0;  
+            time_out = timer.get_time() + 10000;
+        }
+        
+        if (timer.get_time() > time_out)
+        {
+            led_0 = 1;
+            turbine_set(0);
+        }
+        else
+        {
+            led_0 = 0;
+            turbine_set(30);
+        }
+
+        led_4 = 0;
+        timer.delay_ms(100);
+        led_4 = 1;
+        timer.delay_ms(100);
+    }
+
+    /*
     while (1)
     {
         led_0 = 0;
@@ -33,11 +67,14 @@ int main()
         led_0 = 1;
         timer.delay_ms(900);
 
+        line_sensor_hw_test();
+
         led_1 = 0;
         terminal << "time = " << timer.get_time() << " ms\n";
         //motor_pwm_test(); 
     }
-
+    
+    */
 
     return 0;
 }

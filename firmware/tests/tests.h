@@ -16,6 +16,8 @@
 void motor_pwm_test();
 //void motor_driver_test();
 
+
+void line_sensor_hw_test();
 //void line_test();
 //void ir_test();
 

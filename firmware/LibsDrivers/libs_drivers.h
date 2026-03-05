@@ -13,6 +13,7 @@
 
 #include "motor_pwm.h"  
 #include "motor_control_bldc.h"
+#include "ls_driver.h"
 
 
 // availible from all files
