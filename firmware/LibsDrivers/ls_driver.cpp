@@ -61,23 +61,6 @@ void LSDriver::read_data(uint16_t *result_buffer, unsigned char adr)
 
     i2c->read(0);
     i2c->stop();
-    
-    return;
-
-    
-    for (uint8_t i = 0; i < LS_DATA_SIZE; i++)
-    {
-        // first read high, then lower byte
-        uint16_t tmp_h = i2c->read_reg(LS_I2C_ADDR<<1, adr + 2*i + 0);
-        uint16_t tmp_l = i2c->read_reg(LS_I2C_ADDR<<1, adr + 2*i + 1);
-        
-        //uint16_t tmp_h = i2c_read_reg(LS_I2C_ADDR<<1, adr + 2*i + 0);
-        //uint16_t tmp_l = i2c_read_reg(LS_I2C_ADDR<<1, adr + 2*i + 1);
-        result_buffer[i] = (tmp_h << 8)|tmp_l;
-    }
-    
-
-    return;
 }
 
 void LSDriver::delay_loops(uint32_t loops)

@@ -10,14 +10,6 @@
     
 #define MOTOR_POLES             ((int32_t)14)       
 
-#define SQRT3       ((int32_t)1773)      // sqrt(3)     = 1773/1024
-#define SQRT3INV    ((int32_t)591)       // 1/sqrt(3)   = 591/1024
-
-#define max2(x,y) (((x) >= (y)) ? (x) : (y)) 
-#define min2(x,y) (((x) <= (y)) ? (x) : (y))
-
-#define max3(x, y, z) (max2(max2(x, y), z))
-#define min3(x, y, z) (min2(min2(x, y), z))
 
 
 
@@ -27,12 +19,12 @@ extern "C" {
 
 MotorControl *g_motor_control_ptr;
 
-// timer 2 interrupt handler, running velocity control
-void TIM2_IRQHandler(void)
+// timer 7 interrupt handler, running velocity control
+void TIM7_IRQHandler(void)
 { 
-    if (LL_TIM_IsActiveFlag_UPDATE(TIM2))
+    if (LL_TIM_IsActiveFlag_UPDATE(TIM7))
     {
-        LL_TIM_ClearFlag_UPDATE(TIM2);
+        LL_TIM_ClearFlag_UPDATE(TIM7);
         g_motor_control_ptr->callback();
     }
 } 
@@ -247,32 +239,32 @@ void MotorControl::callback()
 
 void MotorControl::timer_init()
 {
-    /* Enable TIM2 clock (on APB1) */
-    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+    /* Enable TIM7 clock (on APB1) */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
 
-    /* Disable TIM2 during configuration */
-    LL_TIM_DisableCounter(TIM2);
+    /* Disable TIM7 during configuration */
+    LL_TIM_DisableCounter(TIM7);
 
     /* Timer clock = 216 MHz (APB1 doubled) */
     /* Prescaler = 215 → 216 MHz / 216 = 1 MHz timer tick */
-    LL_TIM_SetPrescaler(TIM2, 215);
+    LL_TIM_SetPrescaler(TIM7, 215);
 
     /* Auto-reload for 4 kHz: 1 MHz / 250 = 4000 Hz */
-    LL_TIM_SetAutoReload(TIM2, 1000000/MOTOR_TIMER_FREQ);
+    LL_TIM_SetAutoReload(TIM7, 1000000/MOTOR_TIMER_FREQ);
 
 
     /* Enable update interrupt (UIE) */
-    LL_TIM_EnableIT_UPDATE(TIM2);       
+    LL_TIM_EnableIT_UPDATE(TIM7);       
 
-    // TIM2 highest priority, p = 0
-    NVIC_SetPriority(TIM2_IRQn, NVIC_EncodePriority(3, 0, 0));
-    NVIC_EnableIRQ(TIM2_IRQn);
+    // TIM7 highest priority, p = 0
+    NVIC_SetPriority(TIM7_IRQn, NVIC_EncodePriority(3, 0, 0));
+    NVIC_EnableIRQ(TIM7_IRQn);
 
     /* Clear update flag */
-    LL_TIM_ClearFlag_UPDATE(TIM2);
+    LL_TIM_ClearFlag_UPDATE(TIM7);
 
     /* Start counter */
-    LL_TIM_EnableCounter(TIM2);
+    LL_TIM_EnableCounter(TIM7);
 }
 
 
@@ -312,29 +304,7 @@ void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle
     int32_t sb = sine_table[angle_b];   
     int32_t sc = sine_table[angle_c];
 
-    /*
-    // center sinusoids around zero
-    sa -= SINE_VALUE_MAX/2;
-    sb -= SINE_VALUE_MAX/2;
-    sc -= SINE_VALUE_MAX/2;    
-
-
-    // transform into space-vector modulation, to achieve full voltage range
-    int32_t min_val = min3(sa, sb, sc);
-    int32_t max_val = max3(sa, sb, sc);
-
-    int32_t com_val = (min_val + max_val)/2;
-
-    //normalise into 0..control_max
-    int32_t norm_a = ( ((sa - com_val)*2*SQRT3INV)/1024 ) + SINE_VALUE_MAX/2;
-    int32_t norm_b = ( ((sb - com_val)*2*SQRT3INV)/1024 ) + SINE_VALUE_MAX/2;
-    int32_t norm_c = ( ((sc - com_val)*2*SQRT3INV)/1024 ) + SINE_VALUE_MAX/2;
-
-    //compute PWM value
-    int32_t pwm_a = (norm_a*torque)/SINE_VALUE_MAX;
-    int32_t pwm_b = (norm_b*torque)/SINE_VALUE_MAX; 
-    int32_t pwm_c = (norm_c*torque)/SINE_VALUE_MAX; 
-    */  
+   
 
     int32_t pwm_a = (sa*torque)/SINE_VALUE_MAX;
     int32_t pwm_b = (sb*torque)/SINE_VALUE_MAX; 

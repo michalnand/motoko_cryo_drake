@@ -3,13 +3,14 @@
 
 // global drivers are instantianed here
 Terminal    terminal;
-Timer       timer;    
+Timer       timer;   
+Sensors     sensors; 
 
 //ADC_driver  adc;
 
 //LineSensor   line_sensor;
 //IRSensor     ir_sensor;
-
+    
 
 MotorControl motor_control;
 
@@ -27,9 +28,7 @@ void LibsDriversInit()
     // timer
     timer.init();
 
-    //adc.init();    
-    //line_sensor.init();
-    //ir_sensor.init();
+    sensors.init();
 
     // motor control init
     //motor_control.init();

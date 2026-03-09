@@ -13,20 +13,14 @@
 
 #include "motor_pwm.h"  
 #include "motor_control_bldc.h"
-#include "ls_driver.h"
+
+#include "sensors.h"
 
 
 // availible from all files
 extern Timer        timer;
 extern Terminal     terminal;
-
-/*
-extern ADC_driver   adc;
-
-extern LineSensor   line_sensor;
-extern IRSensor     ir_sensor;
-*/
-
+extern Sensors      sensors;
 extern MotorControl motor_control;
 
 void LibsDriversInit();
