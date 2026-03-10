@@ -6,12 +6,6 @@ Terminal    terminal;
 Timer       timer;   
 Sensors     sensors; 
 
-//ADC_driver  adc;
-
-//LineSensor   line_sensor;
-//IRSensor     ir_sensor;
-    
-
 MotorControl motor_control;
 
 void LibsDriversInit()
@@ -28,8 +22,9 @@ void LibsDriversInit()
     // timer
     timer.init();
 
+    // line sensor and proximity sensor init
     sensors.init();
 
-    // motor control init
-    //motor_control.init();
+    // motor control init, FOC control, encoders
+    motor_control.init();
 }

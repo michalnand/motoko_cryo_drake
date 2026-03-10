@@ -45,34 +45,49 @@ int Sensors::init()
     weights[8] = -4*LINE_SENSOR_STEP;
     weights[9] = -5*LINE_SENSOR_STEP;
 
-
+    this->sensor_status = 0;
     this->line_lost_type = LINE_LOST_CENTER;
     this->on_line_count  = 0;
 
-    this->left_position = 0.0;
-    this->right_position = 0.0;
-    this->center_position = 0.0;
+    this->left_position = 0.0f;
+    this->right_position = 0.0f;
+    this->center_position = 0.0f;
 
-    this->minimal_position = 0.0;
-    this->extremal_position = 0.0; 
+    this->minimal_position = 0.0f;
+    this->extremal_position = 0.0f; 
 
-    this->left_angle = 0.0;
-    this->right_angle = 0.0;
+    this->left_angle = 0.0f;
+    this->right_angle = 0.0f;
+
+    // proximity sensor vars init
+    this->front_left_proximity = 0.0f;
+    this->left_proximity = 0.0f;
+    this->right_proximity = 0.0f;
+    this->front_right_proximity = 0.0f;
 
 
-    // hardware init
+    // hardware init 
     i2c.init();
     ls_driver.init(i2c);
 
     int resp = ls_driver.init(i2c);
+
+    timer_init();
 
     return resp;
 }
 
 void Sensors::callback()
 {
-    // Callback code here
     uint8_t result = ls_driver.read_who_am_i();
+    if (result == LS_WHO_AM_I_VALUE)
+    {
+        this->sensor_status = 1;
+    }
+    else
+    {
+        this->sensor_status = 0;
+    }   
         
     uint16_t sensor_reading[LS_DATA_SIZE];
 
@@ -82,7 +97,7 @@ void Sensors::callback()
     // copy line and proximity sensor readings to class members
     for (int i = 0; i < (int)line_reading_result.size(); i++)
     {
-        line_reading_result[i] = sensor_reading[i];
+        line_reading_result[i] = 4096 - sensor_reading[i];
     }
 
     for (int i = 0; i < (int)proximity_reading_result.size(); i++)
@@ -172,7 +187,6 @@ void Sensors::line_sensor_process()
     }
     
 
-   
     left_position  = left_position_tmp;
     right_position = right_position_tmp;
 
@@ -198,7 +212,29 @@ void Sensors::line_sensor_process()
 
 void Sensors::proximity_sensor_process()
 {
-    // TODO
+    float k = 0.125;
+
+   
+    
+    {
+        float tmp = (4096 - proximity_reading_result[0])/4096.0;
+        this->front_left_proximity = k*tmp + (1.0 - k)*this->front_left_proximity;
+    }
+
+    {
+        float tmp = (4096 - proximity_reading_result[1])/4096.0;
+        this->left_proximity = k*tmp + (1.0 - k)*this->left_proximity;
+    }
+    
+    {
+        float tmp = (4096 - proximity_reading_result[2])/4096.0;
+        this->right_proximity = k*tmp + (1.0 - k)*this->right_proximity;
+    }
+
+    {
+        float tmp = (4096 - proximity_reading_result[3])/4096.0;
+        this->front_right_proximity = k*tmp + (1.0 - k)*this->front_right_proximity;
+    }
 }
    
 
@@ -273,8 +309,8 @@ void Sensors::timer_init()
     /* Enable update interrupt (UIE) */
     LL_TIM_EnableIT_UPDATE(TIM8);       
 
-    /* TIM8 update interrupt, priority = 2 (lower than motor FOC loop) */
-    NVIC_SetPriority(TIM8_UP_TIM13_IRQn, NVIC_EncodePriority(3, 2, 0));
+    /* TIM8 update interrupt, preemption priority = 2 (lower than motor FOC, higher than SysTick) */
+    NVIC_SetPriority(TIM8_UP_TIM13_IRQn, NVIC_EncodePriority(0, 2, 0));
     NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
 
     /* Clear update flag */

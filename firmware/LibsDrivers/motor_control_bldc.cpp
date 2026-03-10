@@ -8,7 +8,7 @@
 #define MOTOR_CONTROL_MAX_TORQUE     ((float)1.0)
 #define MOTOR_CONTROL_MAX_VELOCITY   ((float)1000.0*2.0*PI/60.0)
     
-#define MOTOR_POLES             ((int32_t)14)       
+#define MOTOR_POLES                  ((int32_t)14)       
 
 
 
@@ -27,7 +27,7 @@ void TIM7_IRQHandler(void)
         LL_TIM_ClearFlag_UPDATE(TIM7);
         g_motor_control_ptr->callback();
     }
-} 
+}   
 
 
 #ifdef __cplusplus
@@ -55,30 +55,31 @@ void MotorControl::init()
     this->right_req_velocity     = 0.0f;
 
     this->left_cl_mode  = false;
-    this->right_cl_mode = false;
+    this->right_cl_mode = false;    
 
 
     
     left_pwm.init();    
     right_pwm.init();
 
-
-   
     // set motors to zero position      
     set_torque_from_rotation(PWM_VALUE_MAX/2, 0, true, 0);
     set_torque_from_rotation(PWM_VALUE_MAX/2, 0, true, 1);
+    
 
     timer.delay_ms(200);    
 
     // calibrate encoders   
     left_encoder.init(); 
-    right_encoder.init();
+    right_encoder.init();   
 
+    
     // release motors   
     set_torque_from_rotation(0, 0, true, 0);
     set_torque_from_rotation(0, 0, true, 1);
 
     timer.delay_ms(100);
+    
 
     //optimal control init 
 
@@ -104,7 +105,7 @@ void MotorControl::init()
     left_controller.init(a, b, k, ki, f, 1.0);
     right_controller.init(a, b, k, ki, f, 1.0);
 
-    //init timer
+    //init timer        
     timer_init();
 }
 
@@ -130,16 +131,16 @@ void  MotorControl::set_right_torque(float right_torque)
 // max velocity is arround 1000RPM (2PI*1000/60 [rad/s])
 void MotorControl::set_left_velocity(float left_velocity)
 {
+    this->left_cl_mode       = true; 
     this->left_req_velocity  = left_velocity;
-    this->left_cl_mode       = true;    
 }
 
 // turn ON closed loop control, and set required velocity in rad/s
 // max velocity is arround 1000RPM (2PI*1000/60 [rad/s])
 void MotorControl::set_right_velocity(float right_velocity)
 {
-    this->right_req_velocity  = right_velocity;
     this->right_cl_mode       = true;
+    this->right_req_velocity  = right_velocity;
 }
 
 
@@ -188,15 +189,15 @@ void MotorControl::callback()
 {
     // refresh encoders
     left_encoder.update();          
-    right_encoder.update();  
-    
+    right_encoder.update();      
+
     // update state
     this->left_position_prev    = this->left_position;
     this->right_position_prev   = this->right_position;
     this->left_position         = -(2.0f*PI*left_encoder.position)/ENCODER_RESOLUTION;
     this->right_position        = (2.0f*PI*right_encoder.position)/ENCODER_RESOLUTION;
 
-    /*
+    
     // LQG controller   
     if (this->left_cl_mode)
     {
@@ -215,16 +216,18 @@ void MotorControl::callback()
     {
         right_controller.reset();
     }
-    */
     
+    
+    /*
     left_controller.kalman_step(this->get_left_velocity(), this->left_torque);
     right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
-
+    */
 
     // scale -1...1 range into -MOTOR_CONTROL_MAX ... MOTOR_CONTROL_MAX
     // send torques to motors   
-    set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX,  left_encoder.angle,  false, 0);
+    set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
     set_torque_from_rotation(this->right_torque*PWM_VALUE_MAX, right_encoder.angle, false, 1);
+    
 
     this->steps++;  
 }
@@ -256,8 +259,8 @@ void MotorControl::timer_init()
     /* Enable update interrupt (UIE) */
     LL_TIM_EnableIT_UPDATE(TIM7);       
 
-    // TIM7 highest priority, p = 0
-    NVIC_SetPriority(TIM7_IRQn, NVIC_EncodePriority(3, 0, 0));
+    // TIM7 highest priority, preemption = 0
+    NVIC_SetPriority(TIM7_IRQn, NVIC_EncodePriority(0, 0, 0));
     NVIC_EnableIRQ(TIM7_IRQn);
 
     /* Clear update flag */
@@ -318,10 +321,10 @@ void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle
 
     if (motor_id == 0)      
     {
-        left_pwm.set(pwm_a, pwm_b, pwm_c);
+        left_pwm.set(pwm_b, pwm_a, pwm_c);
     }   
     else         
     {
-        right_pwm.set(pwm_b, pwm_a, pwm_c);
+        right_pwm.set(pwm_a, pwm_b, pwm_c);
     }
-}
+}   

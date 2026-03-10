@@ -18,9 +18,11 @@ void motor_pwm_test();
 
 
 void line_sensor_hw_test();
-//void line_test();
-//void ir_test();
 
+void sensors_test();
+void encoder_test();
+
+void motor_foc_test();
 
 //void motor_identification();
 

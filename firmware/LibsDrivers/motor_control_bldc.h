@@ -43,10 +43,10 @@ class MotorControl
         void timer_init();
 
     private: 
-        AS5600T<11, 10, 5, 'C', 'C'> left_encoder;
-        AS5600T<5, 12,  5,  'B', 'C'> right_encoder;
+        AS5600T<12, 13, 5, 'B', 'B'> left_encoder;
+        AS5600T<10, 11, 5,  'C', 'C'> right_encoder;
+        
 
-            
         PWMLeftThreePhase  left_pwm;
         PWMRightThreePhase right_pwm;
 

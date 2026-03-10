@@ -14,7 +14,7 @@ int LSDriver::init(I2C_Interface &i2c)
     ls_reset_pin = 1;   
     delay_loops(10000000);
 
-    if (read_who_am_i() == WHO_AM_I_VALUE)
+    if (read_who_am_i() == LS_WHO_AM_I_VALUE)
     {
         return 0;
     }
@@ -27,13 +27,13 @@ int LSDriver::init(I2C_Interface &i2c)
 
 /*
    validate if device is connected and responding
-   must returns value WHO_AM_I_VALUE (171 dec)
+   must returns value LS_WHO_AM_I_VALUE (171 dec)
 */
 uint8_t LSDriver::read_who_am_i()
 {
     return i2c->read_reg(LS_I2C_ADDR<<1, LS_WHOAMI_REG);
 }
-
+    
 
 /*
   fill buffer with uint16_t values from sensors,

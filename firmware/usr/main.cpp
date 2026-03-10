@@ -10,7 +10,11 @@ int main()
 
     terminal << "machine ready\n";
 
+    // sensors_test();
+    // encoder_test();
+    motor_foc_test();
 
+    /*
     Gpio<'B', 0, GPIO_MODE_OUT> led_0;
     Gpio<'C', 4, GPIO_MODE_OUT> led_1;
     Gpio<'A', 7, GPIO_MODE_OUT> led_2;
@@ -58,6 +62,7 @@ int main()
         led_4 = 1;
         timer.delay_ms(100);
     }
+    */
 
     /*
     while (1)

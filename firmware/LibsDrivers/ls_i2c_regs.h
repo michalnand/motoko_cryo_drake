@@ -4,7 +4,7 @@
 #include <stdint.h>
     
 
-#define WHO_AM_I_VALUE    ((uint8_t)171)
+#define LS_WHO_AM_I_VALUE  ((uint8_t)171)
 #define LS_DATA_SIZE      ((uint8_t)14)              // num of numerical values
 
 #define LS_BLOCK_SIZE     ((uint8_t)2*LS_DATA_SIZE)  // num of bytes for data segment
@@ -15,7 +15,7 @@
 #define LS_I2C_ADDR       ((uint8_t)0x42)
 
 // main registers
-#define LS_WHOAMI_REG     ((uint8_t)0x00)  //ID reg, readed as WHO_AM_I_VALUE
+#define LS_WHOAMI_REG     ((uint8_t)0x00)  //ID reg, readed as LS_WHO_AM_I_VALUE
 #define LS_CONFIG0_REG    ((uint8_t)0x01)  //config 0, led drive modes
 #define LS_CONFIG1_REG    ((uint8_t)0x02)  //config 1, not used
 #define LS_FILTER_REG     ((uint8_t)0x03)  //filter coeff, 0..255

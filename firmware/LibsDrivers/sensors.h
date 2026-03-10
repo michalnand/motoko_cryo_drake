@@ -7,18 +7,14 @@
 
 
 // sensors sampling frequency, 200Hz or 400Hz
-#define SENSORS_TIMER_FREQ      ((uint32_t)400)
+#define SENSORS_TIMER_FREQ      ((uint32_t)250)
 
 
 
 #define LINE_SENSOR_STEP                ((int32_t)128)
 
-//sensitivity
-//#define LINE_SENSOR_THRESHOLD           ((int32_t)500)   
-//#define LINE_SENSOR_THRESHOLD           ((int32_t)300)   
-#define LINE_SENSOR_THRESHOLD           ((int32_t)250)   
-//#define LINE_SENSOR_THRESHOLD           ((int32_t)200)   
-//#define LINE_SENSOR_THRESHOLD           ((int32_t)150)   
+//sensitivity, higher value less sensitive
+#define LINE_SENSOR_THRESHOLD           ((int32_t)2800)   
 
     
 
@@ -66,6 +62,7 @@ class Sensors
 
     // line sensor vars
     public:
+        uint32_t sensor_status;
         uint32_t line_lost_type;
         uint32_t on_line_count;
 
@@ -77,8 +74,12 @@ class Sensors
         //line position into angle (radians)
         float left_angle, right_angle;
 
+    // proximity sensor vars
+    public:
+        float front_left_proximity, left_proximity, right_proximity, front_right_proximity;
 
-    private:
+
+    public:
         Array<int, LINE_SENSOR_COUNT> line_reading_result;
         Array<int, LINE_SENSOR_COUNT> weights;
 
