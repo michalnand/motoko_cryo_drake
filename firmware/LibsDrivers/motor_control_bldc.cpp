@@ -92,6 +92,12 @@ void MotorControl::init()
     left_controller.init(a, b, k, ki, f, 1.0);
     right_controller.init(a, b, k, ki, f, 1.0);
 
+    float sg_coeffs_11_2[] = {  258.74125874,   67.13286713,  -77.85547786, -176.22377622, -227.97202797,
+                               -233.1002331,  -191.60839161, -103.4965035,    31.23543124,  212.58741259,
+                                440.55944056};
+
+    state.init(sg_coeffs_11_2, 1.0f/MOTOR_TIMER_FREQ, 200.0f);
+
     //init timer        
     timer_init();
 }
@@ -205,6 +211,15 @@ void MotorControl::callback()
         right_controller.reset();
         right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
     }
+
+    // linear distance : average wheels traveled distance, convert radians to distanc
+    float distance = (WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position + this->right_position)/(2.0f*2.0f*PI);
+
+    // angle : difference of wheels traveled distance ratio to wheels brace, convert radians to angle
+    float theta    = (WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position - this->right_position)/(WHEEL_BRACE_MM);
+    
+    // update state estimator, returns smoothed robot state
+    state.step(distance, theta);
     
 
     // scale -1...1 range into -MOTOR_CONTROL_MAX ... MOTOR_CONTROL_MAX
