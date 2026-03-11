@@ -14,6 +14,8 @@ int main()
     // encoder_test();
     motor_foc_test();
 
+    //motor_identification();
+
     /*
     Gpio<'B', 0, GPIO_MODE_OUT> led_0;
     Gpio<'C', 4, GPIO_MODE_OUT> led_1;
