@@ -6,7 +6,7 @@
     
 #define MOTOR_TIMER_FREQ             ((uint32_t)2000)
 #define MOTOR_CONTROL_MAX_TORQUE     ((float)1.0)
-#define MOTOR_CONTROL_MAX_VELOCITY   ((float)1000.0*2.0*PI/60.0)
+
     
 #define MOTOR_POLES                  ((int32_t)14)       
 
@@ -79,28 +79,15 @@ void MotorControl::init()
     set_torque_from_rotation(0, 0, true, 1);
 
     timer.delay_ms(100);
+
+    //optimal control init 
+    float a =  0.92059711;
+    float b =  16.43346038;
+
+    float k  =  0.00170242;
+    float ki =  0.00015592;
+    float f  =  0.05386474; 
     
-
-    //optimal control init 
-
-    // Q = 1, R = 4*(10**7)
-    /*
-    float a =  0.98147325;
-    float b =  5.60662146;
-
-    float k  =  0.00491353;
-    float ki =  0.00015595;
-    float f  =  0.14402203;
-    */
-
-    //optimal control init 
-    float a =  0.9390764;
-    float b =  12.51632753;
-
-    float k  =  0.00213882;
-    float ki =  0.00015601;
-    //float f  =  0.08275113;   
-    float f  =  0.15678327;
 
     left_controller.init(a, b, k, ki, f, 1.0);
     right_controller.init(a, b, k, ki, f, 1.0);
@@ -206,6 +193,7 @@ void MotorControl::callback()
     else
     {
         left_controller.reset();
+        left_controller.kalman_step(this->get_left_velocity(), this->left_torque);
     }
 
     if (this->right_cl_mode)
@@ -215,13 +203,9 @@ void MotorControl::callback()
     else
     {
         right_controller.reset();
+        right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
     }
     
-    
-    /*
-    left_controller.kalman_step(this->get_left_velocity(), this->left_torque);
-    right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
-    */
 
     // scale -1...1 range into -MOTOR_CONTROL_MAX ... MOTOR_CONTROL_MAX
     // send torques to motors   

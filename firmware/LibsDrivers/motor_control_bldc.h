@@ -4,6 +4,7 @@
 #include <as5600_t.h>
 #include <lqg_single.h>
 
+#define MOTOR_CONTROL_MAX_VELOCITY   ((float)2000.0*2.0*PI/60.0)
 
 class MotorControl
 {
@@ -23,17 +24,12 @@ class MotorControl
         float get_left_position();
         float get_left_velocity();
         float get_left_velocity_hat();
-        
-        //float get_left_position_smooth();
-        //float get_left_velocity_smooth();
 
     public:
         float get_right_position();
         float get_right_velocity();
         float get_right_velocity_hat();
         
-        //float get_right_position_smooth();
-        //float get_right_velocity_smooth();
 
     public:
         void callback();
@@ -59,7 +55,6 @@ class MotorControl
         float left_position, right_position;
         float left_position_prev, right_position_prev;
 
-        //bool left_ol_mode, right_ol_mode;
         float left_torque, right_torque;
         float left_req_velocity, right_req_velocity;
 

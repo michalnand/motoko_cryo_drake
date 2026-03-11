@@ -27,8 +27,7 @@ void motor_foc_test();
 
 void motor_identification();
 
-//void motor_control_test();
+void motor_controll_test();
 
-//void encoder_filter_test();
 
 #endif
