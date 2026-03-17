@@ -184,7 +184,7 @@ void MotorControl::callback()
     left_encoder.update();          
     right_encoder.update();      
 
-    // update state
+    // update state, position to radians
     this->left_position_prev    = this->left_position;
     this->right_position_prev   = this->right_position;
     this->left_position         = -(2.0f*PI*left_encoder.position)/ENCODER_RESOLUTION;
@@ -216,7 +216,7 @@ void MotorControl::callback()
     float distance = (WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position + this->right_position)/(2.0f*2.0f*PI);
 
     // angle : difference of wheels traveled distance ratio to wheels brace, convert radians to angle
-    float theta    = (WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position - this->right_position)/(WHEEL_BRACE_MM);
+    float theta    = (WHEEL_RADIUS_MM)*(this->left_position - this->right_position)/(WHEEL_BRACE_MM);
     
     // update state estimator, returns smoothed robot state
     state.step(distance, theta);

@@ -1,8 +1,10 @@
 #include <libs_drivers.h>
 #include <tmath.h>
 
-#define RPM_MAX     ((uint32_t)1000)
-#define NUM_SAMPLES ((uint32_t)2000)
+#define FORWARD_RPM_MAX     ((uint32_t)300)
+#define TURN_RPM_MAX        ((uint32_t)700) 
+
+#define NUM_SAMPLES ((uint32_t)1250)
 #define DT_MS       ((uint32_t)4)
 
 // distance and angle thresholds for bang-bang switching
@@ -14,11 +16,40 @@
 #define THETA_THRESHOLD_MIN ((float)0.05)    // rad
 
 
+uint32_t g_random_var = 0;
+
+uint8_t random()
+{
+    g_random_var = (g_random_var * 1664525) + 1013904223;
+    return (int32_t)g_random_var >> 3;
+}
+
+
 void robot_idenditification()
 {
+    Gpio<'B', 2, GPIO_MODE_IN_PULLUP> key_0;
     Gpio<'B', 0, GPIO_MODE_OUT> led;
-   
+    
+    // wait for key press to start experiment
+    while (key_0 == 1)
+    {
+        led = 0;  
+        timer.delay_ms(100);
+        led = 1;  
+        timer.delay_ms(800);
+    }
+
+    while (key_0 == 0)
+    {
+        led = 0;  
+        timer.delay_ms(100);
+        led = 1;  
+        timer.delay_ms(100);
+    }
+
     led = 0;  
+
+    timer.delay_ms(500); 
 
     //stop motor
     motor_control.halt();
@@ -34,8 +65,8 @@ void robot_idenditification()
     float x_omega[NUM_SAMPLES];
 
     // bang-bang state: +1 or -1
-    float forward_sign = 1.0f;
-    float turn_sign    = 1.0f;
+    float forward_sign = 0.0f;
+    float turn_sign    = 0.0f;
 
     // reference points for measuring distance/angle travelled since last switch
     float dist_ref  = motor_control.state.x_dist_est;
@@ -46,43 +77,109 @@ void robot_idenditification()
     {
         uint32_t time_start = timer.get_time();
 
-        // progress ratio 0..1 over the experiment
-        float progress = (float)n / (float)NUM_SAMPLES;
 
-        // sweep thresholds from max to min (frequency increases over time)
-        float dist_threshold  = DIST_THRESHOLD_MAX  + (DIST_THRESHOLD_MIN  - DIST_THRESHOLD_MAX)  * progress;
-        float theta_threshold = THETA_THRESHOLD_MAX + (THETA_THRESHOLD_MIN - THETA_THRESHOLD_MAX) * progress;
-
-        // current state
-        float dist_now  = motor_control.state.x_dist_est;
-        float theta_now = motor_control.state.x_theta_est;
-
-        // check if distance travelled since last forward switch exceeds threshold
-        float dist_delta = dist_now - dist_ref;
-        if (dist_delta < 0.0f) dist_delta = -dist_delta;
-
-        if (dist_delta >= dist_threshold)
+        if ((n%15) == 0)
         {
-            forward_sign = -forward_sign;
-            dist_ref = dist_now;
-        }
+            switch (random()%9)
+            {
+                case 0:
+                    forward_sign = 0.0f;
+                    turn_sign    = 0.0f;
+                    break;
 
-        // check if angle rotated since last turn switch exceeds threshold
-        float theta_delta = theta_now - theta_ref;
-        if (theta_delta < 0.0f) theta_delta = -theta_delta;
+                    
+                case 1:
+                    forward_sign = 0.5f;
+                    turn_sign    = 0.0f;
+                    break;
 
-        if (theta_delta >= theta_threshold)
-        {
-            turn_sign = -turn_sign;
-            theta_ref = theta_now;
+                case 2:
+                    forward_sign = -0.5f;
+                    turn_sign    = 0.0f;
+                    break;
+
+                case 3:
+                    forward_sign = 1.0f;
+                    turn_sign    = 0.0f;
+                    break;
+
+                case 4:
+                    forward_sign = -1.0f;
+                    turn_sign    = 0.0f;
+                    break;
+
+
+                case 5:
+                    forward_sign = 0.0f;
+                    turn_sign    = 0.5f;
+                    break;
+
+                case 6:
+                    forward_sign = 0.0f;
+                    turn_sign    = 0.5f;
+                    break;
+
+                case 7:
+                    forward_sign = 0.0f;
+                    turn_sign    = 1.0f;
+                    break;
+
+                case 8:
+                    forward_sign = 0.0f;
+                    turn_sign    = -1.0f;
+                    break;
+              
+            }
+
+            /*
+            switch (random()%5)
+            {
+                case 0:
+                    forward_sign = 0.0f;
+                    break;
+                case 1:
+                    forward_sign = 1.0f;
+                    break;
+                case 2:
+                    forward_sign = -1.0f;
+                    break;
+                case 3:
+                    forward_sign = 0.5f;
+                    break;
+                case 4:
+                    forward_sign = -0.5f;
+                    break;
+            }
+            
+
+            switch (random()%5)
+            {
+                case 0:
+                    turn_sign = 0.0f;
+                    break;
+                case 1:
+                    turn_sign = 1.0f;
+                    break;
+                case 2:
+                    turn_sign = -1.0f;
+                    break;
+                case 3:
+                    turn_sign = 0.5f;
+                    break;
+                case 4:
+                    turn_sign = -0.5f;
+                    break;
+            }
+            */
         }
+        
 
         // generate two kind of motions, separated for forward only and turn only
         // the both motions are square wave like pattern with sweeping frequency
         // the switch of direction is when given distance travelled, or angle rotated
         // motions have zero mean value - basically it is simple bang bang control with sweeping frequency
-        float u_forward_ = forward_sign * (float)RPM_MAX;
-        float u_turn_    = turn_sign    * (float)RPM_MAX;
+        float u_forward_ = forward_sign * (float)FORWARD_RPM_MAX;
+        float u_turn_    = turn_sign    * (float)TURN_RPM_MAX;
 
         float left_rpm  = u_forward_ + u_turn_;
         float right_rpm = u_forward_ - u_turn_;
@@ -107,6 +204,10 @@ void robot_idenditification()
             led = 1;
         }
 
+
+
+
+
         uint32_t time_stop = timer.get_time();
 
         int32_t time_wait = DT_MS - (time_stop - time_start);
@@ -121,24 +222,23 @@ void robot_idenditification()
     
     timer.delay_ms(200);     
     
+    while (true)
+    {
+        while (key_0 == 1)
+        {
+            led = 0;  
+            timer.delay_ms(100);
+            led = 1;  
+            timer.delay_ms(800);
+        }
 
-    // TODO terminal print results
-    
-    for (unsigned int n = 0; n < NUM_SAMPLES; n++)
-    {
-        terminal << "u_forward = " << u_forward[n] << "\t";
-        terminal << "u_turn    = " << u_turn[n]    << "\t";
-        terminal << "x_dist    = " << x_distance[n] << "\t";
-        terminal << "x_theta   = " << x_theta[n]    << "\t";
-        terminal << "x_vel     = " << x_velocity[n] << "\t";
-        terminal << "x_omega   = " << x_omega[n]    << "\n";
-    }
-   
-    while(1)
-    {
-        led = 0;  
-        timer.delay_ms(100);
-        led = 1;     
-        timer.delay_ms(900);
+        terminal << "\n\n\n";
+        
+        for (unsigned int n = 0; n < NUM_SAMPLES; n++)
+        {
+            terminal << n << " " << u_forward[n] << " " << u_turn[n] << " " << x_distance[n] << " " << x_velocity[n] << " "  << x_theta[n] << " " << x_omega[n] << "\n";
+        }
+
+        terminal << "\n\n\n";
     }
 }

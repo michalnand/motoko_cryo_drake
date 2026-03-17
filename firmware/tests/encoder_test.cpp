@@ -43,12 +43,17 @@ void encoder_test()
         uint32_t m_curr = motor_control.steps;
         led_0 = 1;
 
+        float distance  = motor_control.state.x_dist_est;
+        float theta_ref = motor_control.state.x_theta_est;
 
+        
         terminal << "steps : " << (m_curr - m_prev) * 10 << "\n";
-        terminal << "left_position_degrees: " << motor_control.get_left_position()*360 << "\n";
+        terminal << "left_position_degrees: " << motor_control.get_left_position()*180/PI << "\n";
         terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
-        terminal << "right_position_degrees: " << motor_control.get_right_position()*360 << "\n";
+        terminal << "right_position_degrees: " << motor_control.get_right_position()*180/PI << "\n";
         terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
+        terminal << "distance [mm]: "  << distance << "\n";  
+        terminal << "theta_ref [deg]: " << theta_ref*180/PI << "\n";
         terminal << "-----------------------------\n\n\n";
 
         timer.delay_ms(200);
