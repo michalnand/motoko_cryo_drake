@@ -29,6 +29,6 @@ void motor_identification();
 
 void motor_controll_test();
 
-void robot_idenditification();
+void robot_identification();
 
 #endif

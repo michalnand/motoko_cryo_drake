@@ -5,7 +5,8 @@
 #include <lqg_single.h>
 #include <state_estimator.h>
 
-#define MOTOR_CONTROL_MAX_VELOCITY   ((float)2000.0*2.0*PI/60.0)
+// 2000rpm max speed, convert to rad/s
+#define MOTOR_CONTROL_MAX_VELOCITY  ((float)2000.0*2.0*PI/60.0)
 
 #define WHEEL_RADIUS_MM             (float(29.0/2.0))
 #define WHEEL_BRACE_MM              (float(86.0))

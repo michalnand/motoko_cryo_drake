@@ -7,13 +7,6 @@
 #define NUM_SAMPLES ((uint32_t)1250)
 #define DT_MS       ((uint32_t)4)
 
-// distance and angle thresholds for bang-bang switching
-// these sweep from max to min over the course of the experiment
-// to produce frequency-sweeping square wave excitation
-#define DIST_THRESHOLD_MAX  ((float)100.0)   // mm
-#define DIST_THRESHOLD_MIN  ((float)5.0)     // mm
-#define THETA_THRESHOLD_MAX ((float)1.0)     // rad
-#define THETA_THRESHOLD_MIN ((float)0.05)    // rad
 
 
 uint32_t g_random_var = 0;
@@ -25,10 +18,12 @@ uint8_t random()
 }
 
 
-void robot_idenditification()
+void robot_identification()
 {
     Gpio<'B', 2, GPIO_MODE_IN_PULLUP> key_0;
     Gpio<'B', 0, GPIO_MODE_OUT> led;
+
+    uint32_t seed = 0;
     
     // wait for key press to start experiment
     while (key_0 == 1)
@@ -37,6 +32,8 @@ void robot_idenditification()
         timer.delay_ms(100);
         led = 1;  
         timer.delay_ms(800);
+
+        seed++;
     }
 
     while (key_0 == 0)
@@ -45,7 +42,11 @@ void robot_idenditification()
         timer.delay_ms(100);
         led = 1;  
         timer.delay_ms(100);
+
+        seed++;
     }
+
+    g_random_var = seed;
 
     led = 0;  
 
@@ -53,7 +54,7 @@ void robot_idenditification()
 
     //stop motor
     motor_control.halt();
-    timer.delay_ms(200); 
+    timer.delay_ms(200);    
 
 
     float u_forward[NUM_SAMPLES];
@@ -78,115 +79,74 @@ void robot_idenditification()
         uint32_t time_start = timer.get_time();
 
 
-        if ((n%15) == 0)
+        if ((n%20) == 0)    
         {
-            switch (random()%9)
-            {
-                case 0:
-                    forward_sign = 0.0f;
-                    turn_sign    = 0.0f;
-                    break;
-
-                    
-                case 1:
-                    forward_sign = 0.5f;
-                    turn_sign    = 0.0f;
-                    break;
-
-                case 2:
-                    forward_sign = -0.5f;
-                    turn_sign    = 0.0f;
-                    break;
-
-                case 3:
-                    forward_sign = 1.0f;
-                    turn_sign    = 0.0f;
-                    break;
-
-                case 4:
-                    forward_sign = -1.0f;
-                    turn_sign    = 0.0f;
-                    break;
-
-
-                case 5:
-                    forward_sign = 0.0f;
-                    turn_sign    = 0.5f;
-                    break;
-
-                case 6:
-                    forward_sign = 0.0f;
-                    turn_sign    = 0.5f;
-                    break;
-
-                case 7:
-                    forward_sign = 0.0f;
-                    turn_sign    = 1.0f;
-                    break;
-
-                case 8:
-                    forward_sign = 0.0f;
-                    turn_sign    = -1.0f;
-                    break;
-              
-            }
-
-            /*
             switch (random()%5)
             {
                 case 0:
                     forward_sign = 0.0f;
                     break;
+                
                 case 1:
-                    forward_sign = 1.0f;
-                    break;
-                case 2:
-                    forward_sign = -1.0f;
-                    break;
-                case 3:
                     forward_sign = 0.5f;
                     break;
-                case 4:
+
+                case 2:
                     forward_sign = -0.5f;
+                    break;  
+
+                case 3:
+                    forward_sign = 1.0f;
+                    break;
+
+                case 4:
+                    forward_sign = -1.0f;
                     break;
             }
-            
+
 
             switch (random()%5)
             {
                 case 0:
                     turn_sign = 0.0f;
                     break;
+                
                 case 1:
-                    turn_sign = 1.0f;
-                    break;
-                case 2:
-                    turn_sign = -1.0f;
-                    break;
-                case 3:
                     turn_sign = 0.5f;
                     break;
-                case 4:
+
+                case 2:
                     turn_sign = -0.5f;
                     break;
+
+                case 3:
+                    turn_sign = 1.0f;
+                    break;
+
+                case 4: 
+                    turn_sign = -1.0f;
+                    break;
             }
-            */
         }
+
         
+        
+
 
         // generate two kind of motions, separated for forward only and turn only
         // the both motions are square wave like pattern with sweeping frequency
         // the switch of direction is when given distance travelled, or angle rotated
         // motions have zero mean value - basically it is simple bang bang control with sweeping frequency
-        float u_forward_ = forward_sign * (float)FORWARD_RPM_MAX;
-        float u_turn_    = turn_sign    * (float)TURN_RPM_MAX;
+        float u_forward_ = forward_sign * 0.2f; 
+        float u_turn_    = turn_sign    * 0.4f;         
+
 
         float left_rpm  = u_forward_ + u_turn_;
         float right_rpm = u_forward_ - u_turn_;
 
-        motor_control.set_left_velocity(left_rpm   * (2.0*PI/60.0));
-        motor_control.set_right_velocity(right_rpm * (2.0*PI/60.0));
-
+        motor_control.set_left_velocity(left_rpm   * MOTOR_CONTROL_MAX_VELOCITY);
+        motor_control.set_right_velocity(right_rpm * MOTOR_CONTROL_MAX_VELOCITY);
+        
         u_forward[n] = u_forward_;
         u_turn[n]    = u_turn_; 
 

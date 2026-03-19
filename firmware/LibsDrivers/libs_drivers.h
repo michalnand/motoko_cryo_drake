@@ -10,6 +10,8 @@
 
 #include "sensors.h"
 
+#include "turbine.h"
+
 
 // availible from all files
 extern Timer        timer;

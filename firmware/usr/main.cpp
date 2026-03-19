@@ -3,6 +3,8 @@
 
 #include "turbine.h"
 
+#include "control_loop.h"
+
 int main()
 {
 
@@ -17,7 +19,42 @@ int main()
     //motor_identification();
     //motor_controll_test();
 
-    robot_idenditification();
+   // robot_identification();   
+
+    // init position control loop
+    ControlLoop control_loop;
+    control_loop.init(sensors, motor_control);
+
+    Gpio<'B', 0, GPIO_MODE_OUT> led_0;
+
+    /*
+    while (1)
+    {
+        uint32_t steps_before = control_loop.steps;
+        timer.delay_ms(100);
+        uint32_t steps_curr   = control_loop.steps;
+        
+        led_0 = 0;
+        terminal << "steps = " << steps_curr << ", steps/s = " << (steps_curr - steps_before)*10 << "\n";   
+        led_0 = 1;
+    }
+    */
+
+    while (1)
+    {
+        control_loop.set_xr(0.0f, 0.0f);
+        timer.delay_ms(500);
+        
+        control_loop.set_xr(0.0f, 90.0*PI/180.0f);
+        timer.delay_ms(500);
+        
+        control_loop.set_xr(0.0f, 0.0f);
+        timer.delay_ms(500);    
+
+        control_loop.set_xr(0.0f, -90.0*PI/180.0f);
+        timer.delay_ms(500);
+    }
+
 
     /*
     Gpio<'B', 0, GPIO_MODE_OUT> led_0;

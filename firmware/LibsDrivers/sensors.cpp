@@ -72,7 +72,7 @@ int Sensors::init()
 
     int resp = ls_driver.init(i2c);
 
-    timer_init();
+    //timer_init();
 
     return resp;
 }

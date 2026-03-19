@@ -212,12 +212,12 @@ void MotorControl::callback()
         right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
     }
 
-    // linear distance : average wheels traveled distance, convert radians to distanc
-    float distance = (WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position + this->right_position)/(2.0f*2.0f*PI);
+    // linear distance : average wheels traveled distance, convert radians to distance in meters
+    float distance = 0.001*(WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position + this->right_position)/(2.0f*2.0f*PI);
 
     // angle : difference of wheels traveled distance ratio to wheels brace, convert radians to angle
     float theta    = (WHEEL_RADIUS_MM)*(this->left_position - this->right_position)/(WHEEL_BRACE_MM);
-    
+        
     // update state estimator, returns smoothed robot state
     state.step(distance, theta);
     

@@ -84,10 +84,7 @@ class Sensors
         Array<int, LINE_SENSOR_COUNT> weights;
 
         Array<int, PROXIMITY_SENSOR_COUNT> proximity_reading_result;
-
-
 };
-    
-        
+         
 
 #endif
