@@ -87,7 +87,7 @@ void MotorControl::init()
     float k  =  0.00170242;
     float ki =  0.00015592;
     float f  =  0.05386474; 
-    
+
 
     left_controller.init(a, b, k, ki, f, 1.0);
     right_controller.init(a, b, k, ki, f, 1.0);
@@ -96,9 +96,9 @@ void MotorControl::init()
                                -233.1002331,  -191.60839161, -103.4965035,    31.23543124,  212.58741259,
                                 440.55944056};
 
-    state.init(sg_coeffs_11_2, 1.0f/MOTOR_TIMER_FREQ, 200.0f);
+    state.init(sg_coeffs_11_2, 1.0f/MOTOR_TIMER_FREQ, 200.0f);   
 
-    //init timer        
+    //init timer                     
     timer_init();
 }
 
@@ -221,7 +221,7 @@ void MotorControl::callback()
     // update state estimator, returns smoothed robot state
     state.step(distance, theta);
     
-
+    
     // scale -1...1 range into -MOTOR_CONTROL_MAX ... MOTOR_CONTROL_MAX
     // send torques to motors   
     set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX, left_encoder.angle,  false, 0);

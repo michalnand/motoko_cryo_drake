@@ -16,7 +16,7 @@ void TIM1_UP_TIM10_IRQHandler(void)
         LL_TIM_ClearFlag_UPDATE(TIM1);
         g_control_loop_ptr->callback();
     }
-} 
+}   
 
 
 #ifdef __cplusplus
@@ -63,8 +63,9 @@ int ControlLoop::init(Sensors &sensors, MotorControl &motor_control)
 
     // init controller  
     //lqr_controller.init((float*)lqr_k,  1.0f);
-    lqr_controller.init((float*)lqr_k, (float*)lqr_ku, 100.0f, 1.0f);
-    
+    //lqr_controller.init((float*)lqr_k, (float*)lqr_ku, 100.0f, 1.0f);
+
+    mpc_controller.init((float*)mpc_phi, (float*)mpc_sigma);    
 
 
     this->x_distance_req = 0.0f;
@@ -95,24 +96,22 @@ void ControlLoop::callback()
         
     // controller computation, obtain control outputs
 
-    // required state
-    lqr_controller.xr[0] = this->x_distance_req;
-    lqr_controller.xr[1] = 0.0f;
-    lqr_controller.xr[2] = this->x_theta_req;
-    lqr_controller.xr[3] = 0.0f;
-    
     // get current state (already filtered in fast 2kHz motor control loop)
-    lqr_controller.x[0] = motor_control->state.x_dist_est;
-    lqr_controller.x[1] = motor_control->state.x_vel_est;
-    lqr_controller.x[2] = motor_control->state.x_theta_est;
-    lqr_controller.x[3] = motor_control->state.x_omega_est;
+    mpc_controller.x[0] = motor_control->state.x_dist_est;
+    mpc_controller.x[1] = motor_control->state.x_vel_est;
+    mpc_controller.x[2] = motor_control->state.x_theta_est;
+    mpc_controller.x[3] = motor_control->state.x_omega_est;
+
+    // required state
+    mpc_controller.set_constant_xr(0, this->x_distance_req);
+    mpc_controller.set_constant_xr(2, this->x_theta_req);   
     
     // controller step
-    lqr_controller.step();  
+    mpc_controller.step();  
 
     // control outputs  
-    float u_forward = lqr_controller.u[0];
-    float u_turn    = lqr_controller.u[1];
+    float u_forward = mpc_controller.u[0];
+    float u_turn    = mpc_controller.u[1];
 
     float left_u  =  u_forward + u_turn;
     float right_u =  u_forward - u_turn;

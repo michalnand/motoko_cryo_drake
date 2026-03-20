@@ -7,11 +7,11 @@
 #include <tmath.h>
 #include <shaper.h>
 
-//#include <mpc.h>
-//#include <mpc_config.h>
+#include <mpc.h>
+#include <mpc_config.h>
 
-#include <lqr.h>
-#include <lqr_config.h>
+//#include <lqr.h>
+//#include <lqr_config.h>
 
 class ControlLoop
 {
@@ -32,11 +32,11 @@ class ControlLoop
     private:
         ShaperVelAcc shaper_distance;
         ShaperVelAcc shaper_angle;
-
+        
         
         //LQR<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> lqr_controller;
-        LQRI<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> lqr_controller;
-        //MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> mpc_controller;
+        //LQRI<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> lqr_controller;
+        MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> mpc_controller;
 
     private:
         float x_distance_req;
