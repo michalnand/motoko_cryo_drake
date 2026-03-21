@@ -140,12 +140,11 @@ void robot_identification()
         float u_forward_ = forward_sign * 0.2f; 
         float u_turn_    = turn_sign    * 0.4f;         
 
-
-        float left_rpm  = u_forward_ + u_turn_;
-        float right_rpm = u_forward_ - u_turn_;
-
-        motor_control.set_left_velocity(left_rpm   * MOTOR_CONTROL_MAX_VELOCITY);
+        float right_rpm = u_forward_ + u_turn_; 
+        float left_rpm  = u_forward_ - u_turn_;
+        
         motor_control.set_right_velocity(right_rpm * MOTOR_CONTROL_MAX_VELOCITY);
+        motor_control.set_left_velocity(left_rpm   * MOTOR_CONTROL_MAX_VELOCITY);
         
         u_forward[n] = u_forward_;
         u_turn[n]    = u_turn_; 
@@ -165,7 +164,7 @@ void robot_identification()
         }
 
 
-
+            
 
 
         uint32_t time_stop = timer.get_time();

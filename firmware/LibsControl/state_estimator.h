@@ -1,11 +1,12 @@
 #ifndef _STATE_ESTIMATOR_H_
 #define _STATE_ESTIMATOR_H_
 
+#include <median_filter.h>
 
 // Hybrid state estimator — header-only, fully templated.
 //
 //   Positions  : EMA low-pass   (cutoff frequency parameter)
-//   Velocities : Savitzky-Golay 1st-derivative (precomputed coefficients)
+//   Velocities : EMA low-pass + median filter (cutoff frequency parameter + window size)
 //
 // Template parameter WINDOW_SIZE sets the SG sliding-window length.
 // All memory is statically allocated — no heap, no STL.
@@ -16,89 +17,46 @@
 //   est.init(sg_coeffs, 1.0f/2000.0f, 50.0f);
 //   est.step(dist, theta);
 
-template<int WINDOW_SIZE>
 class StateEstimator
 {
     public:
-        StateEstimator()
+        void init(float pos_cutoff_freq, float vel_cutoff_freq, float dt)
         {
-            x_dist_est  = 0.0f;
-            x_vel_est   = 0.0f;
-            x_theta_est = 0.0f;
-            x_omega_est = 0.0f;
-
-            alpha     = 1.0f;
-            buf_count = 0;
-        }
-
-        // sg_coeffs  : precomputed Savitzky-Golay 1st-derivative coefficients
-        //              (length = WINDOW_SIZE, causal / right-aligned)
-        // dt         : sampling period [s]
-        // cutoff_freq: EMA cutoff frequency [Hz] for position smoothing
-        void init(const float *sg_coeffs, float dt, float cutoff_freq)
-        {
-            buf_count = 0;
-
-            for (int i = 0; i < WINDOW_SIZE; i++)
-            {
-                this->sg_coeffs[i] = sg_coeffs[i];
-                buf_dist[i]  = 0.0f;
-                buf_theta[i] = 0.0f;
-            }
-
+            float rc;
+            this->dt = dt;
             // EMA coefficient from cutoff frequency
             // alpha = dt / (RC + dt),  RC = 1 / (2 * pi * f_c)
-            float rc = 1.0f / (2.0f * 3.14159265358979f * cutoff_freq);
-            alpha    = dt / (rc + dt);
+            rc = 1.0f / (2.0f * 3.14159265358979f * pos_cutoff_freq);
+            pos_alpha    = dt / (rc + dt);
+
+            rc = 1.0f / (2.0f * 3.14159265358979f * vel_cutoff_freq);
+            vel_alpha    = dt / (rc + dt);
 
             x_dist_est  = 0.0f;
             x_vel_est   = 0.0f;
             x_theta_est = 0.0f;
             x_omega_est = 0.0f;
+
+            x_dist_prev  = 0.0f;
+            x_theta_prev = 0.0f;
+
+            velocity_median_filter.init();
+            omega_median_filter.init(); 
         }
 
         // push new distance and angle measurements, updates all public outputs
         void step(float x_dist, float x_theta)
         {
             // EMA for positions
-            x_dist_est  += alpha * (x_dist  - x_dist_est);
-            x_theta_est += alpha * (x_theta - x_theta_est);
+            x_dist_est  =  (1.0f - pos_alpha) * x_dist_est  + pos_alpha * x_dist;
+            x_theta_est =  (1.0f - pos_alpha) * x_theta_est + pos_alpha * x_theta;
+            
+            // EMA + median filter for velocities
+            x_vel_est   = (1.0f - vel_alpha) * x_vel_est   + vel_alpha * velocity_median_filter.step((x_dist  - x_dist_prev)/dt);
+            x_omega_est = (1.0f - vel_alpha) * x_omega_est + vel_alpha * omega_median_filter.step((x_theta - x_theta_prev)/dt);   
 
-            // shift ring buffers left, append EMA-smoothed values
-            for (int i = 0; i < WINDOW_SIZE - 1; i++)
-            {
-                buf_dist[i]  = buf_dist[i + 1];
-                buf_theta[i] = buf_theta[i + 1];
-            }
-            buf_dist[WINDOW_SIZE - 1]  = x_dist_est;
-            buf_theta[WINDOW_SIZE - 1] = x_theta_est;
-
-            if (buf_count < WINDOW_SIZE)
-            {
-                buf_count++;
-            }
-
-            if (buf_count < WINDOW_SIZE)
-            {
-                // not enough samples for SG — zero velocity
-                x_vel_est   = 0.0f;
-                x_omega_est = 0.0f;
-            }
-            else
-            {
-                // velocity estimation via SG 1st-derivative dot product
-                float vel   = 0.0f;
-                float omega = 0.0f;
-
-                for (int i = 0; i < WINDOW_SIZE; i++)
-                {
-                    vel   += sg_coeffs[i] * buf_dist[i];
-                    omega += sg_coeffs[i] * buf_theta[i];
-                }
-
-                x_vel_est   = vel;
-                x_omega_est = omega;
-            }
+            x_dist_prev  = x_dist;  
+            x_theta_prev = x_theta;
         }
 
     public:
@@ -109,13 +67,16 @@ class StateEstimator
         float x_omega_est;
 
     private:
-        float alpha;
+        float pos_alpha;
+        float vel_alpha;
+        float dt;
 
-        float sg_coeffs[WINDOW_SIZE];
-        float buf_dist[WINDOW_SIZE];
-        float buf_theta[WINDOW_SIZE];
+        float x_dist_prev;
+        float x_theta_prev;
 
-        int   buf_count;
+        MedianFilter<float, MEDIAN_5> velocity_median_filter;
+        MedianFilter<float, MEDIAN_5> omega_median_filter;
+
 };
 
 #endif

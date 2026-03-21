@@ -70,11 +70,19 @@ class AS5600T
                     init_res = 0;
                 }  
 
+                i2c_write_reg(I2C_ADDRESS, CONF_L_ADR, 0);
+                i2c_write_reg(I2C_ADDRESS, CONF_H_ADR, 0); 
+
                 //power on
                 //hysteresis 1 LSB 
                 //slow filter only, 8x 
-                i2c_write_reg(I2C_ADDRESS, CONF_L_ADR, (1<<2));
-                i2c_write_reg(I2C_ADDRESS, CONF_H_ADR, (1<<0)); 
+                //i2c_write_reg(I2C_ADDRESS, CONF_L_ADR, (1<<2));
+                //i2c_write_reg(I2C_ADDRESS, CONF_H_ADR, (1<<0)); 
+
+                //hysteresis 3 LSB 
+                //slow filter only, 8x 
+                //i2c_write_reg(I2C_ADDRESS, CONF_L_ADR, (1<<3)|(1<<2));
+                //i2c_write_reg(I2C_ADDRESS, CONF_H_ADR, (1<<0)); 
 
 
                 this->position          = 0;

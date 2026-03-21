@@ -4,7 +4,7 @@
 #include <drivers.h>
 #include <common.h>
 
-
+#include "led.h"
 #include "motor_pwm.h"  
 #include "motor_control_bldc.h"
 
@@ -18,6 +18,7 @@ extern Timer        timer;
 extern Terminal     terminal;
 extern Sensors      sensors;
 extern MotorControl motor_control;
+extern LED          led;
 
 void LibsDriversInit();
 

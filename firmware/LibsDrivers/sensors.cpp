@@ -11,6 +11,7 @@ extern "C" {
 Sensors *g_sensors_ptr;
 
 // timer 8 interrupt handler, running sensors reading
+/*
 void TIM8_UP_TIM13_IRQHandler(void)
 { 
     if (LL_TIM_IsActiveFlag_UPDATE(TIM8))
@@ -19,6 +20,7 @@ void TIM8_UP_TIM13_IRQHandler(void)
         g_sensors_ptr->callback();
     }
 } 
+*/
 
 
 #ifdef __cplusplus

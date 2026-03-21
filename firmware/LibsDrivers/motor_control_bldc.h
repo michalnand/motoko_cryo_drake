@@ -4,12 +4,13 @@
 #include <as5600_t.h>
 #include <lqg_single.h>
 #include <state_estimator.h>
+#include <median_filter.h>
 
 // 2000rpm max speed, convert to rad/s
 #define MOTOR_CONTROL_MAX_VELOCITY  ((float)2000.0*2.0*PI/60.0)
 
-#define WHEEL_RADIUS_MM             (float(29.0/2.0))
-#define WHEEL_BRACE_MM              (float(86.0))
+#define WHEEL_RADIUS_MM             (float(30.8/2.0))   
+#define WHEEL_BRACE_MM              (float(83.0))        
 
 
 #define SG_WINDOW_SIZE 11
@@ -18,7 +19,7 @@ class MotorControl
 {
 
     public:
-        void init();
+        int init();
 
         void set_left_torque(float left_torque);
         void set_right_torque(float right_torque);
@@ -68,8 +69,13 @@ class MotorControl
 
         bool  left_cl_mode, right_cl_mode;
 
+    private:
+        MedianFilter<float, MEDIAN_5> left_velocity_median_filter;
+        MedianFilter<float, MEDIAN_5> right_velocity_median_filter;
+
     public:
-        StateEstimator <SG_WINDOW_SIZE> state;
+        //StateEstimator <SG_WINDOW_SIZE> state;
+        StateEstimator state;
 };
 
 

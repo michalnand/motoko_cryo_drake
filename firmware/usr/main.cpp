@@ -13,114 +13,70 @@ int main()
     terminal << "machine ready\n";
 
     // sensors_test();
-    //encoder_test();
+    //encoder_test();   
     //motor_foc_test();
 
     //motor_identification();
-    //motor_controll_test();
+    //motor_controll_test();    
 
-   // robot_identification();   
+    //robot_identification();   
 
     // init position control loop
     ControlLoop control_loop;
     control_loop.init(sensors, motor_control);
 
-    Gpio<'B', 0, GPIO_MODE_OUT> led_0;
+
+    while (1)
+    {
+        control_loop.set_xr(0.0f, 0.0f*PI/180.0f);
+        timer.delay_ms(500);
+        terminal << "angle "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
+
+        control_loop.set_xr(0.0f, 90.0f*PI/180.0f);
+        timer.delay_ms(500);   
+        terminal << "angle "<< motor_control.state.x_theta_est*180.0f/PI << "\n"; 
+    }
 
     /*
-    while (1)
-    {
-        uint32_t steps_before = control_loop.steps;
-        timer.delay_ms(100);
-        uint32_t steps_curr   = control_loop.steps;
-        
-        led_0 = 0;
-        terminal << "steps = " << steps_curr << ", steps/s = " << (steps_curr - steps_before)*10 << "\n";   
-        led_0 = 1;
-    }
-    */
+    float k = 0.95f;
+    float u_val = 0.0f;
 
     while (1)
     {
-        control_loop.set_xr(0.0f, 0.0f);
-        timer.delay_ms(500);
-        
-        control_loop.set_xr(0.0f, 90.0*PI/180.0f);
-        timer.delay_ms(500);
-        
-        control_loop.set_xr(0.0f, 0.0f);
+        u_val = 0.0f;
+        while ((motor_control.state.x_theta_est*180.0f/PI) < 90.0f)
+        {
+            u_val = k*u_val + (1.0-k)*0.2f*MOTOR_CONTROL_MAX_VELOCITY;
+
+            motor_control.set_right_velocity(u_val);
+            motor_control.set_left_velocity(-u_val);
+
+            timer.delay_ms(4);
+        }
+
+        motor_control.set_right_velocity(0);
+        motor_control.set_left_velocity(0);
+
         timer.delay_ms(500);    
+        terminal << "angle "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
 
-        control_loop.set_xr(0.0f, -90.0*PI/180.0f);
-        timer.delay_ms(500);
-    }
-
-
-    /*
-    Gpio<'B', 0, GPIO_MODE_OUT> led_0;
-    Gpio<'C', 4, GPIO_MODE_OUT> led_1;
-    Gpio<'A', 7, GPIO_MODE_OUT> led_2;
-
-    Gpio<'A', 0, GPIO_MODE_OUT> led_3;
-    Gpio<'A', 1, GPIO_MODE_OUT> led_4;
-    Gpio<'A', 2, GPIO_MODE_OUT> led_5;
-
-    led_0 = 1;
-    led_1 = 1;
-    led_2 = 1;
-
-    led_3 = 1;
-    led_4 = 1;  
-    led_5 = 1;
-
-
-    Gpio<'B', 2, GPIO_MODE_IN_PULLUP> key_0;
-
-    turbine_init();
-
-    uint32_t time_out = 0;
-
-    while (1)
-    {
-        if (key_0 == 0)
+        u_val = 0.0f;
+        while ((motor_control.state.x_theta_est*180.0f/PI) > 0.0f)
         {
-            led_0 = 0;  
-            time_out = timer.get_time() + 10000;
-        }
-        
-        if (timer.get_time() > time_out)
-        {
-            led_0 = 1;
-            turbine_set(0);
-        }
-        else
-        {
-            led_0 = 0;
-            turbine_set(30);
+            u_val = k*u_val + (1.0-k)*(-0.2f)*MOTOR_CONTROL_MAX_VELOCITY;
+            
+            motor_control.set_right_velocity(u_val);
+            motor_control.set_left_velocity(-u_val);
+
+            timer.delay_ms(4);  
         }
 
-        led_4 = 0;
-        timer.delay_ms(100);
-        led_4 = 1;
-        timer.delay_ms(100);
+        motor_control.set_right_velocity(0);
+        motor_control.set_left_velocity(0);
+
+        timer.delay_ms(500); 
+        terminal << "angle "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
     }
-    */
-
-    /*
-    while (1)
-    {
-        led_0 = 0;
-        timer.delay_ms(100);
-        led_0 = 1;
-        timer.delay_ms(900);
-
-        line_sensor_hw_test();
-
-        led_1 = 0;
-        terminal << "time = " << timer.get_time() << " ms\n";
-        //motor_pwm_test(); 
-    }
-    
     */
 
     return 0;

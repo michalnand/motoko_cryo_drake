@@ -8,13 +8,18 @@ Sensors     sensors;
 
 MotorControl motor_control;
 
+LED          led;
+
 void LibsDriversInit()
 {
+    int init_res;
     // low level init, cache, clock
     drivers_init();  
 
     // uart initialisation
     uart_init();
+
+    led.init();
 
     // terminal init
     terminal.init();
@@ -23,8 +28,60 @@ void LibsDriversInit()
     timer.init();
 
     // line sensor and proximity sensor init
-    sensors.init();
+    init_res = sensors.init();
+
+    if (init_res != 0)
+    {
+        terminal << "sensors init failed\n";
+
+        while (1)
+        {
+            led.on(LED::LEFT_RED);
+            led.on(LED::RIGHT_RED);
+            timer.delay_ms(200);
+            led.off(LED::LEFT_RED);
+            led.off(LED::RIGHT_RED);
+            timer.delay_ms(200);
+        }   
+    }
 
     // motor control init, FOC control, encoders
-    motor_control.init();
+    init_res = motor_control.init();
+
+    if (init_res == -1)
+    {
+        terminal << "left encoder init failed\n";
+
+        while (1)
+        {
+            led.on(LED::LEFT_RED);
+            timer.delay_ms(200);
+            led.off(LED::LEFT_RED);
+            timer.delay_ms(200);
+        }
+    }
+    else if (init_res == -2)
+    {
+        terminal << "right encoder init failed\n";
+
+        while (1)
+        {
+            led.on(LED::RIGHT_RED);
+            timer.delay_ms(200);
+            led.off(LED::RIGHT_RED);
+            timer.delay_ms(200);
+        }
+    }
+    else
+    {
+        led.on(LED::LEFT_GREEN);    
+        led.on(LED::RIGHT_GREEN);
+    }
+
+
+    timer.delay_ms(500);
+
+    led.all_off();
+    led.on(LED::RIGHT_BLUE);
+    led.on(LED::LEFT_BLUE);
 }

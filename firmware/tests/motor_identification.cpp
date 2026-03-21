@@ -24,7 +24,7 @@ void motor_identification()
         //run motor with desired input and wait for steady state
         float u_in = u_values[j];
 
-        motor_control.set_right_torque(u_in); 
+        motor_control.set_left_torque(u_in); 
         timer.delay_ms(1000);       
 
         float a      = 0.95;    
@@ -33,7 +33,7 @@ void motor_identification()
 
         for (unsigned int i = 0; i < n_steps; i++)
         {
-            float x = motor_control.get_right_velocity();
+            float x = motor_control.get_left_velocity();
             
             x_mean = a*x_mean + (1.0 - a)*x; 
             
@@ -82,8 +82,8 @@ void motor_identification()
 
     for (unsigned int i = 0; i < n_steps; i++)
     {
-        motor_control.set_right_torque(u_in);
-        float x = motor_control.get_right_velocity(); //*60.0/(2.0*PI);
+        motor_control.set_left_torque(u_in);
+        float x = motor_control.get_left_velocity(); //*60.0/(2.0*PI);
 
         if (u_in > 0.0) 
         {
@@ -105,7 +105,7 @@ void motor_identification()
         timer.delay_ms(1);
     }
     
-    motor_control.set_right_torque(0);
+    motor_control.set_left_torque(0);
     timer.delay_ms(200);     
     
     float t_period = (2*n_steps/periods)/PI;

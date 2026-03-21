@@ -5,7 +5,7 @@
 | Timer / Source              | Function                                        | Frequency       |
 |-----------------------------|-------------------------------------------------|-----------------|
 | SysTick                     | Timer, delays, basic timing                     | 1000 Hz         |
-| TIM7 (`TIM7_IRQHandler`)   | Motor FOC control loop (incl. I2C encoder read) | 2000 Hz         |
+| TIM7 (`TIM7_IRQHandler`)    | Motor FOC control loop (incl. I2C encoder read) | 2000 Hz         |
 | TIM8/TIM13 (`TIM8_UP_TIM13_IRQHandler`) | Sensor sampling (line sensor, proximity) | 200 – 400 Hz |
 
 ---

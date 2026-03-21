@@ -11,8 +11,6 @@
 #define MOTOR_POLES                  ((int32_t)14)       
 
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,7 +34,7 @@ void TIM7_IRQHandler(void)
 
 
 //init motor control process
-void MotorControl::init()
+int MotorControl::init()
 {
     g_motor_control_ptr = this;
 
@@ -52,15 +50,15 @@ void MotorControl::init()
     this->right_position        = 0.0f;
 
     this->left_req_velocity     = 0.0f;
-    this->right_req_velocity     = 0.0f;
+    this->right_req_velocity    = 0.0f;
 
     this->left_cl_mode  = false;
     this->right_cl_mode = false;    
 
 
     
-    left_pwm.init();    
     right_pwm.init();
+    left_pwm.init();    
 
     // set motors to zero position      
     set_torque_from_rotation(PWM_VALUE_MAX/2, 0, true, 0);
@@ -70,8 +68,8 @@ void MotorControl::init()
     timer.delay_ms(200);    
 
     // calibrate encoders   
-    left_encoder.init(); 
-    right_encoder.init();   
+    int right_init_res = right_encoder.init();   
+    int left_init_res  = left_encoder.init(); 
 
     
     // release motors   
@@ -81,25 +79,48 @@ void MotorControl::init()
     timer.delay_ms(100);
 
     //optimal control init 
+    /*
     float a =  0.92059711;
     float b =  16.43346038;
 
     float k  =  0.00170242;
     float ki =  0.00015592;
     float f  =  0.05386474; 
+    */
+
+    float a =  0.93395853;
+    float b =  11.47450799; 
 
 
-    left_controller.init(a, b, k, ki, f, 1.0);
+    float k  =  0.00365991;
+    float ki =  0.00030965;
+    float f  =  0.08042387;
+
     right_controller.init(a, b, k, ki, f, 1.0);
+    left_controller.init(a, b, k, ki, f, 1.0);
 
-    float sg_coeffs_11_2[] = {  258.74125874,   67.13286713,  -77.85547786, -176.22377622, -227.97202797,
-                               -233.1002331,  -191.60839161, -103.4965035,    31.23543124,  212.58741259,
-                                440.55944056};
+    //state.init(100000, 100000, 1.0f/MOTOR_TIMER_FREQ);
+    //state.init(MOTOR_TIMER_FREQ/10, 10, 1.0f/MOTOR_TIMER_FREQ);
+    state.init(MOTOR_TIMER_FREQ/10, MOTOR_TIMER_FREQ/10, 1.0f/MOTOR_TIMER_FREQ);    
 
-    state.init(sg_coeffs_11_2, 1.0f/MOTOR_TIMER_FREQ, 200.0f);   
-
-    //init timer                     
+    // velocity filters
+    right_velocity_median_filter.init();
+    left_velocity_median_filter.init();
+    
+    //init timer  
     timer_init();
+
+    if (left_init_res != 0)
+    {
+        return -1;
+    }
+
+    if (right_init_res != 0)
+    {
+        return -2;
+    }
+
+    return 0;
 }
 
 
@@ -181,51 +202,54 @@ float MotorControl::get_right_velocity_hat()
 void MotorControl::callback()
 {
     // refresh encoders
-    left_encoder.update();          
     right_encoder.update();      
+    left_encoder.update();          
+    
 
     // update state, position to radians
-    this->left_position_prev    = this->left_position;
     this->right_position_prev   = this->right_position;
-    this->left_position         = -(2.0f*PI*left_encoder.position)/ENCODER_RESOLUTION;
+    this->left_position_prev    = this->left_position;
     this->right_position        = (2.0f*PI*right_encoder.position)/ENCODER_RESOLUTION;
-
+    this->left_position         = -(2.0f*PI*left_encoder.position)/ENCODER_RESOLUTION;
     
+        
     // LQG controller   
+    if (this->right_cl_mode)
+    {
+        float fil = right_velocity_median_filter.step(this->get_right_velocity());
+        this->right_torque = right_controller.step(this->right_req_velocity, fil);
+    }
+    else        
+    {
+        right_controller.reset();
+        right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
+    }
+
     if (this->left_cl_mode)
     {
-        this->left_torque = left_controller.step(this->left_req_velocity, this->get_left_velocity());
-    }
+        float fil = left_velocity_median_filter.step(this->get_left_velocity());
+        this->left_torque = left_controller.step(this->left_req_velocity, fil);
+    }   
     else
     {
         left_controller.reset();
         left_controller.kalman_step(this->get_left_velocity(), this->left_torque);
     }
 
-    if (this->right_cl_mode)
-    {
-        this->right_torque = right_controller.step(this->right_req_velocity, this->get_right_velocity());
-    }
-    else
-    {
-        right_controller.reset();
-        right_controller.kalman_step(this->get_right_velocity(), this->right_torque);
-    }
-
     // linear distance : average wheels traveled distance, convert radians to distance in meters
     float distance = 0.001*(WHEEL_RADIUS_MM*2.0f*PI)*(this->left_position + this->right_position)/(2.0f*2.0f*PI);
 
     // angle : difference of wheels traveled distance ratio to wheels brace, convert radians to angle
-    float theta    = (WHEEL_RADIUS_MM)*(this->left_position - this->right_position)/(WHEEL_BRACE_MM);
-        
-    // update state estimator, returns smoothed robot state
-    state.step(distance, theta);
+    float theta    = (WHEEL_RADIUS_MM)*(this->right_position - this->left_position)/(WHEEL_BRACE_MM);
+
+    // update state estimator, holds smooth robot state
+    state.step(distance, theta);     
+
     
-    
-    // scale -1...1 range into -MOTOR_CONTROL_MAX ... MOTOR_CONTROL_MAX
+    // scale -1...1 range into -PWM_VALUE_MAX .. PWM_VALUE_MAX
     // send torques to motors   
-    set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
     set_torque_from_rotation(this->right_torque*PWM_VALUE_MAX, right_encoder.angle, false, 1);
+    set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
     
 
     this->steps++;  
@@ -258,7 +282,7 @@ void MotorControl::timer_init()
     /* Enable update interrupt (UIE) */
     LL_TIM_EnableIT_UPDATE(TIM7);       
 
-    // TIM7 highest priority, preemption = 0
+    // TIM7  highest priority, preemption = 0   
     NVIC_SetPriority(TIM7_IRQn, NVIC_EncodePriority(0, 0, 0));
     NVIC_EnableIRQ(TIM7_IRQn);
 

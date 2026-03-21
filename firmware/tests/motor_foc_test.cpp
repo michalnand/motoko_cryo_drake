@@ -16,7 +16,7 @@ void motor_foc_test()
         {
             led_0 = 0;
             uint32_t m_prev = motor_control.steps;
-            timer.delay_ms(50);
+            timer.delay_ms(100);
             uint32_t m_curr = motor_control.steps;
             led_0 = 1;
 
@@ -37,15 +37,15 @@ void motor_foc_test()
                     torque = 0.0;
                     state = 0;
                 }
-            }
+            }   
             
-            motor_control.set_left_torque(torque);
+            motor_control.set_left_torque(torque);  
             motor_control.set_right_torque(torque);
 
-            terminal << "steps : " << (m_curr - m_prev) * 50 << "\n";
-            terminal << "left_position_degrees: " << motor_control.get_left_position()*360 << "\n";
+            terminal << "steps : " << (m_curr - m_prev) * 10 << "\n";
+            terminal << "left_position_degrees: " << motor_control.get_left_position()*180/PI << "\n";
             terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
-            terminal << "right_position_degrees: " << motor_control.get_right_position()*360 << "\n";
+            terminal << "right_position_degrees: " << motor_control.get_right_position()*180/PI << "\n";
             terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
             terminal << "-----------------------------\n\n\n";
         }

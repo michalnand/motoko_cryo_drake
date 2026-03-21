@@ -16,7 +16,7 @@ void motor_controll_test()
             uint32_t m_curr = motor_control.steps;
             led_0 = 1;  
 
-            float req_rpm;  
+            float req_rpm;      
 
             req_rpm = req_rpm_list[(steps/300)%5];   
 
