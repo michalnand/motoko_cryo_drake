@@ -8,6 +8,7 @@
 #define DT_MS       ((uint32_t)4)
 
 
+#include <shaper_filter.h>
 
 uint32_t g_random_var = 0;
 
@@ -23,7 +24,6 @@ void robot_identification()
     Gpio<'B', 2, GPIO_MODE_IN_PULLUP> key_0;
     Gpio<'B', 0, GPIO_MODE_OUT> led;
 
-    uint32_t seed = 0;
     
     // wait for key press to start experiment
     while (key_0 == 1)
@@ -32,8 +32,6 @@ void robot_identification()
         timer.delay_ms(100);
         led = 1;  
         timer.delay_ms(800);
-
-        seed++;
     }
 
     while (key_0 == 0)
@@ -42,11 +40,9 @@ void robot_identification()
         timer.delay_ms(100);
         led = 1;  
         timer.delay_ms(100);
-
-        seed++;
     }
 
-    g_random_var = seed;
+    g_random_var = timer.get_time();
 
     led = 0;  
 
@@ -73,7 +69,12 @@ void robot_identification()
     float dist_ref  = motor_control.state.x_dist_est;
     float theta_ref = motor_control.state.x_theta_est;
 
+    ShaperFilter shaper_distance, shaper_angle;
+    shaper_distance.init(0.7f);
+    shaper_angle.init(0.7f);  
     
+    turbine_on();
+
     for (unsigned int n = 0; n < NUM_SAMPLES; n++)
     {
         uint32_t time_start = timer.get_time();
@@ -137,17 +138,20 @@ void robot_identification()
         // the both motions are square wave like pattern with sweeping frequency
         // the switch of direction is when given distance travelled, or angle rotated
         // motions have zero mean value - basically it is simple bang bang control with sweeping frequency
-        float u_forward_ = forward_sign * 0.2f; 
-        float u_turn_    = turn_sign    * 0.4f;         
+        float u_forward_ = shaper_distance.step(forward_sign * 0.3f); 
+        float u_turn_    = shaper_angle.step(turn_sign * 0.6f);         
 
-        float right_rpm = u_forward_ + u_turn_; 
-        float left_rpm  = u_forward_ - u_turn_;
-        
-        motor_control.set_right_velocity(right_rpm * MOTOR_CONTROL_MAX_VELOCITY);
-        motor_control.set_left_velocity(left_rpm   * MOTOR_CONTROL_MAX_VELOCITY);
+        float u_right = u_forward_ + u_turn_; 
+        float u_left  = u_forward_ - u_turn_;
+
+        //motor_control.set_right_velocity(u_right * MOTOR_CONTROL_MAX_VELOCITY);
+        //motor_control.set_left_velocity(u_left   * MOTOR_CONTROL_MAX_VELOCITY);
+
+        motor_control.set_right_torque(u_right);
+        motor_control.set_left_torque(u_left);   
         
         u_forward[n] = u_forward_;
-        u_turn[n]    = u_turn_; 
+        u_turn[n]    = u_turn_;     
 
         x_distance[n] = motor_control.state.x_dist_est;
         x_theta[n]    = motor_control.state.x_theta_est;
@@ -178,6 +182,8 @@ void robot_identification()
 
     motor_control.set_left_torque(0);   
     motor_control.set_right_torque(0);
+
+    turbine_off();
     
     timer.delay_ms(200);     
     

@@ -78,7 +78,8 @@ void LibsDriversInit()
         led.on(LED::RIGHT_GREEN);
     }
 
-
+    turbine_init();
+    
     timer.delay_ms(500);
 
     led.all_off();

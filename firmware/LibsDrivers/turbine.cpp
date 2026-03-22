@@ -13,6 +13,8 @@ void turbine_init()
     LL_GPIO_SetPinPull(GPIOB, LL_GPIO_PIN_10, LL_GPIO_PULL_NO);
 
     /* Timer base configuration */
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
+
     LL_TIM_SetPrescaler(TIM2, prescaler);
     LL_TIM_SetAutoReload(TIM2, period);
     LL_TIM_EnableARRPreload(TIM2);
@@ -39,4 +41,24 @@ void turbine_set(uint32_t pwm)
     }
 
     LL_TIM_OC_SetCompareCH3(TIM2, pwm);
-}   
+} 
+
+
+void turbine_on()
+{
+    uint32_t turbine_power = 30;
+    for (uint32_t n = 0; n < 10; n++)
+    {
+        uint32_t pwm = ((n+1)*turbine_power)/10;
+        turbine_set(pwm);
+        timer.delay_ms(100); 
+    }  
+
+    timer.delay_ms(200);
+}
+
+void turbine_off()
+{
+    turbine_set(0);
+    timer.delay_ms(500);
+}

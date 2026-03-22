@@ -8,5 +8,7 @@
 void turbine_init();
 void turbine_set(uint32_t pwm);
 
+void turbine_on();
+void turbine_off();
 
 #endif //_TURBINE_H_

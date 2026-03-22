@@ -44,9 +44,9 @@ void motor_foc_test()
 
             terminal << "steps : " << (m_curr - m_prev) * 10 << "\n";
             terminal << "left_position_degrees: " << motor_control.get_left_position()*180/PI << "\n";
-            terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
+            //terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
             terminal << "right_position_degrees: " << motor_control.get_right_position()*180/PI << "\n";
-            terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
+            //terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
             terminal << "-----------------------------\n\n\n";
         }
 }

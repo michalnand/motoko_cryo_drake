@@ -5,10 +5,9 @@
 
 
 #include <tmath.h>
-//#include <shaper.h>
 #include <shaper_filter.h>
 
-
+#include <pid.h>
 
 #include <lqr.h>
 #include <lqr_config.h>
@@ -36,11 +35,8 @@ class ControlLoop
         MotorControl *motor_control;    
     
     private:
-        //ShaperVelAcc shaper_distance, shaper_angle;
         ShaperFilter shaper_distance, shaper_angle;
         
-        //LQR<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> controller;
-        //LQRI<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> controller;
         MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> controller;
 
     private:

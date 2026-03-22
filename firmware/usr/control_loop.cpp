@@ -2,8 +2,8 @@
 
 #define CONTROLLER_UPDATE_RATE_HZ  ((uint32_t)250)
 
-#ifdef __cplusplus
-extern "C" {
+#ifdef __cplusplus  
+extern "C" {    
 #endif
 
 ControlLoop *g_control_loop_ptr;
@@ -59,16 +59,14 @@ int ControlLoop::init(Sensors &sensors, MotorControl &motor_control)
     }
     */
 
-    shaper_distance.init(0.8f);
-    shaper_angle.init(0.8f);   
+    shaper_distance.init(0.6f);
+    shaper_angle.init(0.6f);         
 
 
     // init controller  
-    //controller.init((float*)lqr_k, 1.0f);
-    //controller.init((float*)lqr_k, (float*)lqr_ku, 1000.0f, 1.0f);
     controller.init((float*)mpc_phi, (float*)mpc_sigma);    
-
-    this->x_distance_req = 0.0f;
+    
+    this->x_distance_req = 0.0f;            
     this->x_theta_req    = 0.0f;    
 
     this->steps = 0;
@@ -91,10 +89,11 @@ void ControlLoop::callback()
     this->sensors->callback();
 
     // shapers for acceleration and velocity limits
-    //float x_distance_req_s = shaper_distance.step(this->x_distance_req);
-    //float x_theta_req_s    = shaper_angle.step(this->x_theta_req);
+    float x_distance_req_s = shaper_distance.step(this->x_distance_req);
+    float x_theta_req_s    = shaper_angle.step(this->x_theta_req);  
         
     // controller computation, obtain control outputs
+
 
     // get current state (already filtered in fast 2kHz motor control loop)
     controller.x[0] = motor_control->state.x_dist_est;
@@ -103,28 +102,22 @@ void ControlLoop::callback()
     controller.x[3] = motor_control->state.x_omega_est; 
 
     // required state, fill constant trajectory for MPC   
-    controller.set_constant_xr(0, shaper_distance.step(this->x_distance_req));    
-    controller.set_constant_xr(2, shaper_angle.step(this->x_theta_req));   
+    controller.set_constant_xr(0, x_distance_req_s);    
+    controller.set_constant_xr(2, x_theta_req_s);   
 
 
-    //controller.xr[0] = shaper_distance.step(this->x_distance_req);
-    //controller.xr[1] = 0.0f;    
-    //controller.xr[2] = shaper_angle.step(this->x_theta_req);
-    //controller.xr[3] = 0.0f;    
-    
     // controller step 
-    controller.step();          
-
-    // control outputs  
+    controller.step();       
+        
+    // control outputs convert to robot control inputs
     float u_forward = controller.u[0];
-    float u_turn    = controller.u[1];
+    float u_turn    = controller.u[1];     
 
-    float right_u =  u_forward + u_turn;    
+    float right_u =  u_forward + u_turn;      
     float left_u  =  u_forward - u_turn;
     
-    // motor loop handles LQR velocity control
-    motor_control->set_right_velocity(right_u * MOTOR_CONTROL_MAX_VELOCITY);
-    motor_control->set_left_velocity(left_u   * MOTOR_CONTROL_MAX_VELOCITY);
+    motor_control->set_right_torque(right_u);
+    motor_control->set_left_torque(left_u);
 
     this->steps++;
 }

@@ -54,7 +54,7 @@ class Sensors
 
     private:
         // init i2c for line sensor, SDA = PA5, SCL = PA4
-        TI2C<'A', 5, 4, 150> i2c;
+        TI2C<'A', 5, 4, 50> i2c;
         LSDriver ls_driver;
 
     public:

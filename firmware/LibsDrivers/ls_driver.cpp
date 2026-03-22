@@ -10,18 +10,19 @@ int LSDriver::init(I2C_Interface &i2c)
 
     // reset pulse
     ls_reset_pin = 0;
-    delay_loops(1000000);
+    delay_loops(10000000);
     ls_reset_pin = 1;   
     delay_loops(10000000);
 
-    if (read_who_am_i() == LS_WHO_AM_I_VALUE)
+    for (unsigned int n = 0; n < 32; n++)
     {
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
+        if (read_who_am_i() != LS_WHO_AM_I_VALUE)
+        {
+            return -1;
+        }
+    } 
+
+    return 0;
 }
 
 

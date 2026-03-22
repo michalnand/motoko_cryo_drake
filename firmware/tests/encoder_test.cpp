@@ -76,9 +76,9 @@ void encoder_test()
             led_0 = 0;  
             //terminal << "steps : " << (m_curr - m_prev) * 10 << "\n";
             terminal << "left_position_degrees: " << motor_control.get_left_position()*180/PI << "\n";
-            terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
+            //terminal << "left_velocity_rpm: " << motor_control.get_left_velocity()*60/(2*PI) << "\n";
             terminal << "right_position_degrees: " << motor_control.get_right_position()*180/PI << "\n";
-            terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
+            //terminal << "right_velocity_rpm: " << motor_control.get_right_velocity()*60/(2*PI) << "\n";
             terminal << "distance [m]:    "  << distance     << " (mean: " << distance_mean     << ", var: " << distance_var << ")\n";  
             terminal << "theta [deg]  :   "  << theta*180/PI << " (mean: " << theta_mean*180/PI << ", var: " << theta_var*180/PI << ")\n";
             terminal << "velocity [m/s]:  "  << velocity     << " (mean: " << velocity_mean     << ", var: " << velocity_var << ")\n";

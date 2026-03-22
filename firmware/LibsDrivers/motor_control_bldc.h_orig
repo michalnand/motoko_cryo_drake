@@ -2,6 +2,7 @@
 #define _MOTOR_CONTROL_BLDC_H_
 
 #include <as5600_t.h>
+#include <lqg_single.h>
 #include <state_estimator.h>
 #include <median_filter.h>
 
@@ -20,13 +21,24 @@ class MotorControl
     public:
         int init();
 
-        void set_right_torque(float right_torque);
         void set_left_torque(float left_torque);
+        void set_right_torque(float right_torque);
+
+        void set_left_velocity(float left_velocity);
+        void set_right_velocity(float right_velocity);
 
         void halt();
 
-        float get_right_position();
+    public:
         float get_left_position();
+        float get_left_velocity();
+        float get_left_velocity_hat();
+
+    public:
+        float get_right_position();
+        float get_right_velocity();
+        float get_right_velocity_hat();
+        
 
     public:
         void callback();
@@ -36,24 +48,33 @@ class MotorControl
         void timer_init();
 
     private: 
-        AS5600T<10, 11, 10,  'C', 'C'> right_encoder;    
         AS5600T<12, 13, 10, 'B', 'B'> left_encoder;
+        AS5600T<10, 11, 10,  'C', 'C'> right_encoder;
         
-        
-        PWMRightThreePhase right_pwm;
+
         PWMLeftThreePhase  left_pwm;
+        PWMRightThreePhase right_pwm;
+
+        LQGSingle left_controller, right_controller;
 
     public:
         uint32_t steps;
 
-        float right_torque, left_torque;
-        float right_position, left_position;
+    private:
+        float left_position, right_position;
+        float left_position_prev, right_position_prev;
+
+        float left_torque, right_torque;
+        float left_req_velocity, right_req_velocity;
+
+        bool  left_cl_mode, right_cl_mode;
 
     private:
-        MedianFilter<float, MEDIAN_5> right_velocity_median_filter;
         MedianFilter<float, MEDIAN_5> left_velocity_median_filter;
+        MedianFilter<float, MEDIAN_5> right_velocity_median_filter;
 
     public:
+        //StateEstimator <SG_WINDOW_SIZE> state;
         StateEstimator state;
 };
 
