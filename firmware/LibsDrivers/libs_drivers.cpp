@@ -46,7 +46,7 @@ void LibsDriversInit()
     }
 
     // motor control init, FOC control, encoders
-    init_res = motor_control.init();
+    init_res = motor_control.init(0.8f);    
 
     if (init_res == -1)
     {

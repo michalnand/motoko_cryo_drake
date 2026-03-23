@@ -47,14 +47,14 @@ void turbine_set(uint32_t pwm)
 void turbine_on()
 {
     uint32_t turbine_power = 30;
-    for (uint32_t n = 0; n < 10; n++)
+    for (uint32_t n = 0; n < 10; n++)    
     {
         uint32_t pwm = ((n+1)*turbine_power)/10;
         turbine_set(pwm);
-        timer.delay_ms(100); 
+        timer.delay_ms(100);  
     }  
 
-    timer.delay_ms(200);
+    timer.delay_ms(200);    
 }
 
 void turbine_off()

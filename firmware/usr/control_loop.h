@@ -5,7 +5,8 @@
 
 
 #include <tmath.h>
-#include <shaper_filter.h>
+#include <shaper_state.h>
+
 
 #include <pid.h>
 
@@ -35,7 +36,9 @@ class ControlLoop
         MotorControl *motor_control;    
     
     private:
-        ShaperFilter shaper_distance, shaper_angle;
+        //ShaperVelAcc shaper_distance, shaper_angle;
+        //ShaperFilter shaper_distance, shaper_angle;
+        ShaperState shaper_distance, shaper_angle;
         
         MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> controller;
 

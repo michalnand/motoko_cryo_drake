@@ -6,6 +6,7 @@
 extern "C" {    
 #endif
 
+
 ControlLoop *g_control_loop_ptr;
 
 // timer 8 interrupt handler, running controller update
@@ -33,46 +34,56 @@ int ControlLoop::init(Sensors &sensors, MotorControl &motor_control)
     
     // hardware init 
     this->sensors->init();
-    this->motor_control->init();
 
 
+    
     float dt = 1.0f/(float)CONTROLLER_UPDATE_RATE_HZ;
 
-    // input shapers, for acceleration and velocity limits
-    /*
-    // linear motion constrains
-    {
-        float v_max            = 5.0f; // m/s
-        float acc_positive_max = 100.0f; // m/s^2
-        float acc_negative_max = -2.0f*acc_positive_max; // m/s^2, faster decceleration for braking
 
-        shaper_distance.init(-v_max, v_max, acc_negative_max, acc_positive_max, 0.3, dt);
-    }
+    // shapers init, smooth run
 
-    // turn motion constrains       
-    {
-        float v_max            = 20.0f; // rad/s  
-        float acc_positive_max = 1000.0f; // rad/s^2   
-        float acc_negative_max = -acc_positive_max; // rad/s^2, faster decceleration for braking
-
-        shaper_angle.init(-v_max, v_max, acc_negative_max, acc_positive_max, 0.3, dt);
-    }
-    */
-
-    shaper_distance.init(0.6f);
-    shaper_angle.init(0.6f);         
-
-
-    // init controller  
-    controller.init((float*)mpc_phi, (float*)mpc_sigma);    
     
-    this->x_distance_req = 0.0f;            
+    {
+        float acc_max   = 4*9.81;
+        float acc_min   = -30*9.81; 
+
+        float tau       = 0.1;  
+
+        shaper_distance.init(acc_min, acc_max, tau, dt);
+    }
+
+    {   
+        float acc_max   = 50*9.81;
+
+        float tau       = 0.2;
+
+        shaper_angle.init(-acc_max, acc_max, tau, dt);
+    }
+
+    
+    //agressive turn
+    {
+        float acc_max   = 500*9.81;
+
+        float tau       = 0.02; 
+
+        shaper_angle.init(-acc_max, acc_max, tau, dt);
+    }
+    
+    
+    
+    
+    // init controller      
+    controller.init((float*)mpc_phi, (float*)mpc_omega, (float*)mpc_sigma, 1.0f, 1.0f);    
+    
+    this->x_distance_req = 0.0f;                  
     this->x_theta_req    = 0.0f;    
 
-    this->steps = 0;
+    this->steps = 0;    
 
     this->timer_init();
-    
+
+        
     return 0;
 }
 
@@ -88,11 +99,9 @@ void ControlLoop::callback()
     // udpate sensors data (line sensor, proximity sensor, incl filtering, processing)
     this->sensors->callback();
 
-    // shapers for acceleration and velocity limits
-    float x_distance_req_s = shaper_distance.step(this->x_distance_req);
-    float x_theta_req_s    = shaper_angle.step(this->x_theta_req);  
-        
     // controller computation, obtain control outputs
+    float dist_req_s  = shaper_distance.step(this->x_distance_req, motor_control->state.x_dist_est, motor_control->state.x_vel_est);
+    float theta_req_s = shaper_angle.step(this->x_theta_req, motor_control->state.x_theta_est, motor_control->state.x_omega_est);
 
 
     // get current state (already filtered in fast 2kHz motor control loop)
@@ -102,8 +111,8 @@ void ControlLoop::callback()
     controller.x[3] = motor_control->state.x_omega_est; 
 
     // required state, fill constant trajectory for MPC   
-    controller.set_constant_xr(0, x_distance_req_s);    
-    controller.set_constant_xr(2, x_theta_req_s);   
+    controller.set_constant_xr(0, dist_req_s);    
+    controller.set_constant_xr(2, theta_req_s);       
 
 
     // controller step 
@@ -111,9 +120,19 @@ void ControlLoop::callback()
         
     // control outputs convert to robot control inputs
     float u_forward = controller.u[0];
-    float u_turn    = controller.u[1];     
-
-    float right_u =  u_forward + u_turn;      
+    float u_turn    = controller.u[1];   
+    
+    /*
+    // constrains, turning have priority over forward
+    u_turn = clip(u_turn, -1.0f, 1.0f);
+            
+    // clamp u forward
+    float max_u_forward = min( 1.0f - u_turn,  1.0f + u_turn);
+    float min_u_forward = max(-1.0f - u_turn, -1.0f + u_turn);
+    
+    u_forward = clip(u_forward, min_u_forward, max_u_forward);
+    */
+    float right_u =  u_forward + u_turn;         
     float left_u  =  u_forward - u_turn;
     
     motor_control->set_right_torque(right_u);

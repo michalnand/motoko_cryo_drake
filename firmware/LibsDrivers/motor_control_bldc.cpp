@@ -34,7 +34,7 @@ void TIM7_IRQHandler(void)
 
 
 //init motor control process
-int MotorControl::init()
+int MotorControl::init(float k)
 {
     g_motor_control_ptr = this;
 
@@ -43,6 +43,11 @@ int MotorControl::init()
     this->right_torque        = 0;
     this->left_torque         = 0;
 
+    this->right_torque_s = 0;
+    this->left_torque_s  = 0;
+
+    this->k = k;
+    
     
     right_pwm.init();
     left_pwm.init();    
@@ -103,7 +108,14 @@ void MotorControl::set_left_torque(float left_torque)
     this->left_torque   = left_torque;
 }
 
+void MotorControl::set(float forward, float turn)
+{
+    float right_torque = forward + turn;
+    float left_torque  = forward - turn;
 
+    set_right_torque(right_torque);
+    set_left_torque(left_torque);
+}   
 
 // force break to both motors
 void MotorControl::halt()
@@ -142,10 +154,13 @@ void MotorControl::callback()
     // update state estimator, holds smooth robot state
     state.step(distance, theta);     
 
+    this->right_torque_s = this->k*this->right_torque_s + (1.0f - this->k)*this->right_torque;
+    this->left_torque_s  = this->k*this->left_torque_s  + (1.0f - this->k)*this->left_torque;
+
     // scale -1...1 range into -PWM_VALUE_MAX .. PWM_VALUE_MAX
     // send torques to motors   
-    set_torque_from_rotation(this->right_torque*PWM_VALUE_MAX, right_encoder.angle, false, 1);
-    set_torque_from_rotation(-this->left_torque*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
+    set_torque_from_rotation(this->right_torque_s*PWM_VALUE_MAX, right_encoder.angle, false, 1);
+    set_torque_from_rotation(-this->left_torque_s*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
     
 
     this->steps++;  

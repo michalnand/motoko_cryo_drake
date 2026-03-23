@@ -18,15 +18,20 @@ class MotorControl
 {
 
     public:
-        int init();
+        int init(float k);
 
         void set_right_torque(float right_torque);
         void set_left_torque(float left_torque);
 
+        void set(float forward, float turn);
+
+        
         void halt();
 
         float get_right_position();
         float get_left_position();
+
+        
 
     public:
         void callback();
@@ -45,8 +50,10 @@ class MotorControl
 
     public:
         uint32_t steps;
-
+        
+        float k;
         float right_torque, left_torque;
+        float right_torque_s, left_torque_s;
         float right_position, left_position;
 
     private:
