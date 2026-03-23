@@ -24,17 +24,10 @@ void TIM8_UP_TIM13_IRQHandler(void)
 }
 #endif
 
-int ControlLoop::init(Sensors &sensors, MotorControl &motor_control)
+int ControlLoop::init()
 {
     // instance init, variables set
     g_control_loop_ptr = this;
-
-    this->sensors       = &sensors;
-    this->motor_control = &motor_control;
-    
-    // hardware init 
-    this->sensors->init();
-
 
     
     float dt = 1.0f/(float)CONTROLLER_UPDATE_RATE_HZ;
@@ -70,11 +63,7 @@ int ControlLoop::init(Sensors &sensors, MotorControl &motor_control)
         shaper_angle.init(-acc_max, acc_max, tau, dt);
     }
     
-    
-    
-    
-    // init controller      
-    controller.init((float*)mpc_phi, (float*)mpc_omega, (float*)mpc_sigma, 1.0f, 1.0f);    
+    position_controller.init();
     
     this->x_distance_req = 0.0f;                  
     this->x_theta_req    = 0.0f;    
@@ -97,46 +86,17 @@ void ControlLoop::set_xr(float x_distance_req, float x_theta_req)
 void ControlLoop::callback()
 {
     // udpate sensors data (line sensor, proximity sensor, incl filtering, processing)
-    this->sensors->callback();
+    sensors.callback();
 
     // controller computation, obtain control outputs
-    float dist_req_s  = shaper_distance.step(this->x_distance_req, motor_control->state.x_dist_est, motor_control->state.x_vel_est);
-    float theta_req_s = shaper_angle.step(this->x_theta_req, motor_control->state.x_theta_est, motor_control->state.x_omega_est);
+    float dist_req_s  = shaper_distance.step(this->x_distance_req, motor_control.state.x_dist_est, motor_control.state.x_vel_est);
+    float theta_req_s = shaper_angle.step(this->x_theta_req, motor_control.state.x_theta_est, motor_control.state.x_omega_est);
 
-
-    // get current state (already filtered in fast 2kHz motor control loop)
-    controller.x[0] = motor_control->state.x_dist_est;
-    controller.x[1] = motor_control->state.x_vel_est;
-    controller.x[2] = motor_control->state.x_theta_est;
-    controller.x[3] = motor_control->state.x_omega_est; 
 
     // required state, fill constant trajectory for MPC   
-    controller.set_constant_xr(0, dist_req_s);    
-    controller.set_constant_xr(2, theta_req_s);       
+    position_controller.set_xr_constant(dist_req_s, theta_req_s);
 
-
-    // controller step 
-    controller.step();       
-        
-    // control outputs convert to robot control inputs
-    float u_forward = controller.u[0];
-    float u_turn    = controller.u[1];   
-    
-    /*
-    // constrains, turning have priority over forward
-    u_turn = clip(u_turn, -1.0f, 1.0f);
-            
-    // clamp u forward
-    float max_u_forward = min( 1.0f - u_turn,  1.0f + u_turn);
-    float min_u_forward = max(-1.0f - u_turn, -1.0f + u_turn);
-    
-    u_forward = clip(u_forward, min_u_forward, max_u_forward);
-    */
-    float right_u =  u_forward + u_turn;         
-    float left_u  =  u_forward - u_turn;
-    
-    motor_control->set_right_torque(right_u);
-    motor_control->set_left_torque(left_u);
+    position_controller.callback(); 
 
     this->steps++;
 }

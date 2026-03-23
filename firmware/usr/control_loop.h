@@ -5,16 +5,10 @@
 
 
 #include <tmath.h>
+#include <position_controller.h>
 #include <shaper_state.h>
 
 
-#include <pid.h>
-
-#include <lqr.h>
-#include <lqr_config.h>
-
-#include <mpc.h>
-#include <mpc_config.h>
 
 
 
@@ -22,7 +16,7 @@
 class ControlLoop
 {
     public:
-        int init(Sensors &sensors, MotorControl &motor_control);
+        int init();
 
         void callback();
 
@@ -31,17 +25,11 @@ class ControlLoop
     private:
         void timer_init();
 
-    public:    
-        Sensors *sensors;
-        MotorControl *motor_control;    
+    private:    
+        ShaperState shaper_distance, shaper_angle;   
+        PositionController position_controller;
     
-    private:
-        //ShaperVelAcc shaper_distance, shaper_angle;
-        //ShaperFilter shaper_distance, shaper_angle;
-        ShaperState shaper_distance, shaper_angle;
-        
-        MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> controller;
-
+       
     private:
         float x_distance_req;
         float x_theta_req;

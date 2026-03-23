@@ -25,7 +25,7 @@ int main()
     
     
     ControlLoop control_loop;
-    control_loop.init(sensors, motor_control);
+    control_loop.init();
 
     while (1) 
     {
