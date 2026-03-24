@@ -29,7 +29,7 @@ int main()
 
     while (1) 
     {
-        control_loop.set_xr(0.0f, 0.0f*PI/180.0f);
+        control_loop.set_position(0.0f, 0.0f*PI/180.0f, false);
 
         uint32_t steps_prev = control_loop.steps;
         timer.delay_ms(800);    
@@ -42,7 +42,7 @@ int main()
         terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
         terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
 
-        control_loop.set_xr(0.0f, 1.5f*90.0f*PI/180.0f);
+        control_loop.set_position(0.0f, 1.5f*90.0f*PI/180.0f, false);
 
         timer.delay_ms(800);  
         terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
