@@ -41,8 +41,14 @@ class Planner:
         v_req = (x_req - x) / dt
         acc_req = numpy.clip((v_req - v) / dt, -self.dec_fwd, self.acc_fwd)
         v_cmd = v + acc_req * dt
+
+        v_brake = numpy.sqrt(2.0 * abs(self.dec_fwd) * abs(x_req - x)) * numpy.sign(x_req - x)
+        v_cmd = numpy.sign(v_cmd) * min(abs(v_cmd), abs(v_brake))    
+
+
         x_new = x + v_cmd * dt
 
+        
         # --- angular axis ---
         w_req = (a_req - a) / dt
         alpha_req = numpy.clip((w_req - w) / dt, -self.acc_w_max, self.acc_w_max)
