@@ -79,11 +79,18 @@ void ControlLoop::callback()
 
   
     // position control mode
-    float acc_min   = -2.0f;
-    float acc_max   = 0.5f;
-    float acc_w_max = 1.0f;
+    float acc_min   = -10.0f;    
+    float acc_max   = 10.0f;    
+    float acc_w_max = 100.0f;
     
-    this->planner_set_position(this->distance_target, this->angle_target, acc_min, acc_max, acc_w_max);
+    if (this->position_mode)
+    {
+        this->planner_set_position(this->distance_target, this->angle_target, acc_min, acc_max, acc_w_max);
+    }
+    else
+    {
+        this->planner_set_circle_motion(this->radius_target, this->velocity_target, acc_min, acc_max);
+    }
 
     position_controller.callback(); 
 
@@ -104,18 +111,18 @@ void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, 
 
     // required position change
     float v_req = (x_req - x)/dt;
-    v_req       = v + clip((v_req - v)/dt, acc_min, acc_max);
+    v_req       = v + clip((v_req - v), acc_min, acc_max);  
 
     // velocity braking limit 
     //float v_brake = sqrtf(2.0f * abs(acc_min) * abs(x_req - x)) * sgn(x_req - x);
     //v_req = sgn(v_req) * fminf(abs(v_req), abs(v_brake));
     
-    float x_new = x + v_req*dt;
+    float x_new = x + v_req*dt; 
 
 
     // required angle change
-    float w_req = (a_req - a)/dt;
-    w_req       = w + clip((w_req - w)/dt, -acc_w_max, acc_w_max);
+    float w_req = (a_req - a)/dt;   
+    w_req       = w + clip((w_req - w), -acc_w_max, acc_w_max);
     float a_new = a + w_req*dt;
 
     position_controller.set_xr_constant(x_new, a_new);

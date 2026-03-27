@@ -27,6 +27,7 @@ int main()
     ControlLoop control_loop;
     control_loop.init();
 
+    /*
     while (1) 
     {
         control_loop.set_position(0.0f, 0.0f*PI/180.0f, false);
@@ -40,15 +41,34 @@ int main()
         terminal << "sps "<< sps << "\n";   
 
         terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
-        terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
+        terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";    
 
-        control_loop.set_position(0.0f, 1.5f*90.0f*PI/180.0f, false);
+        control_loop.set_position(0.1f, 0.0f*90.0f*PI/180.0f, false);
 
         timer.delay_ms(800);  
         terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
         terminal << "angle "<< motor_control.state.x_theta_est*180.0f/PI << "\n"; 
 
         terminal << "\n\n";
+    }
+    */
+
+    while (1)
+    {
+        control_loop.set_circle_motion(0.1f, 1.0f, false);
+
+        uint32_t steps_prev = control_loop.steps;
+        timer.delay_ms(800);    
+        uint32_t steps_curr = control_loop.steps;   
+
+        uint32_t sps = (float)(steps_curr - steps_prev)*(1000.0f/800.0f);
+
+        terminal << "sps "<< sps << "\n";   
+
+        terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
+        terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";    
+
+        terminal << "\n\n"; 
     }
     
     /*

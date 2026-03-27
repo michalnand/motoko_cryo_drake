@@ -35,7 +35,7 @@ class Planner:
         (x_new, a_new) : tuple of float
         """
         dt = self.dt
-        x, v, a, w = state
+        x, v, a, w = state #+ numpy.random.randn(4)*0.01
 
         # --- forward axis ---
         v_req = (x_req - x) / dt
@@ -45,7 +45,6 @@ class Planner:
         v_brake = numpy.sqrt(2.0 * abs(self.dec_fwd) * abs(x_req - x)) * numpy.sign(x_req - x)
         v_cmd = numpy.sign(v_cmd) * min(abs(v_cmd), abs(v_brake))    
 
-
         x_new = x + v_cmd * dt
 
         
@@ -53,6 +52,10 @@ class Planner:
         w_req = (a_req - a) / dt
         alpha_req = numpy.clip((w_req - w) / dt, -self.acc_w_max, self.acc_w_max)
         w_cmd = w + alpha_req * dt
+
+        w_brake = numpy.sqrt(2.0 * abs(self.acc_w_max) * abs(a_req - a)) * numpy.sign(a_req - a)
+        w_cmd = numpy.sign(w_cmd) * min(abs(w_cmd), abs(w_brake))    
+
         a_new = a + w_cmd * dt
 
         return x_new, a_new

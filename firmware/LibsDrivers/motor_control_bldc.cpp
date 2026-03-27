@@ -75,7 +75,7 @@ int MotorControl::init(float k)
 
     // state estimator, holds smooth robot state
     float pos_cutoff_freq = 200.0f;
-    float vel_cutoff_freq = 200.0f; 
+    float vel_cutoff_freq = 200.0f;     
     state.init(pos_cutoff_freq, vel_cutoff_freq, 1.0f/MOTOR_TIMER_FREQ);
 
 
