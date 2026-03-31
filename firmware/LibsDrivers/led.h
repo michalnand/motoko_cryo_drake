@@ -22,6 +22,8 @@ public:
     void off(LedId id);
 
     void all_off();
+
+    void led_blink(LedId id);
     
 private:
     void set(LedId id, int value);
@@ -32,4 +34,6 @@ private:
     Gpio<'A', 0, GPIO_MODE_OUT> led_3; // right red
     Gpio<'A', 1, GPIO_MODE_OUT> led_4; // right green
     Gpio<'A', 2, GPIO_MODE_OUT> led_5; // right blue
+
+    uint32_t counter;
 };

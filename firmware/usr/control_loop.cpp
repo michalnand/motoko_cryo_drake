@@ -38,7 +38,6 @@ int ControlLoop::init()
     this->velocity_target = 0.0f;
 
     
-    this->fast_mode = false;
     this->position_mode = true;
 
     
@@ -52,22 +51,20 @@ int ControlLoop::init()
 }
 
 
-void ControlLoop::set_position(float distance_target, float angle_target, bool fast_mode)
+void ControlLoop::set_position(float distance_target, float angle_target)
 {
     this->distance_target = distance_target;
     this->angle_target    = angle_target;
 
     this->position_mode = true;
-    this->fast_mode     = fast_mode;
 }
 
-void ControlLoop::set_circle_motion(float radius_target, float velocity_target, bool fast_mode)
+void ControlLoop::set_circle_motion(float radius_target, float velocity_target)
 {
     this->velocity_target   = velocity_target;
     this->radius_target     = radius_target;
 
     this->position_mode = false;
-    this->fast_mode     = fast_mode;
 }
 
 
@@ -141,14 +138,11 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
     float a     = motor_control.state.x_theta_est;
     float w     = motor_control.state.x_omega_est;
 
-
     // estimate required velocity change (acceleration)
-    // note : decelerration can be much faster 
     float acc_req = (v_req - v)/dt;
 
     // acceleration limit
     acc_req = clip(acc_req, acc_min, acc_max);
-
 
     float v_curr    = v;
     float req_x     = x;
@@ -168,9 +162,29 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
         req_x+= vc*dt;
         req_angle+= va*dt;      
 
-        // fill controller trajectory with calculated motion change
+        // fill controller predictive trajectory with calculated motion change
         this->position_controller.set_xr_trajectory(n, req_x, req_angle);
     }
+}
+
+float ControlLoop::get_distance()
+{
+    return motor_control.state.x_dist_est;
+}
+
+float ControlLoop::get_angle()
+{
+    return motor_control.state.x_theta_est;
+}
+
+float ControlLoop::get_velocity()
+{
+    return motor_control.state.x_vel_est;
+}
+
+float ControlLoop::get_angular_velocity()
+{
+    return motor_control.state.x_omega_est;
 }
 
 

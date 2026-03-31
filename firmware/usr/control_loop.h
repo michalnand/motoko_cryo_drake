@@ -20,8 +20,13 @@ class ControlLoop
 
         void callback();
 
-        void set_position(float distance_target, float angle_target, bool fast_mode);
-        void set_circle_motion(float radius_target, float velocity_target, bool fast_mode);
+        void set_position(float distance_target, float angle_target);
+        void set_circle_motion(float radius_target, float velocity_target);
+
+        float get_distance();
+        float get_angle();
+        float get_velocity();
+        float get_angular_velocity();
 
     private:
         void planner_set_position(float x_req, float a_req, float acc_min, float acc_max, float acc_w_max);   
@@ -38,7 +43,7 @@ class ControlLoop
     private:
         float   distance_target, angle_target;
         float   radius_target, velocity_target;
-        bool    fast_mode, position_mode;
+        bool    position_mode;
 
 
     public:

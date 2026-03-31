@@ -55,18 +55,24 @@ int main()
 
     while (1)
     {
-        control_loop.set_circle_motion(0.1f, 1.0f, false);
+        control_loop.set_circle_motion(0.18f, 0.5f);
 
-        uint32_t steps_prev = control_loop.steps;
+        uint32_t steps_prev = control_loop.steps;   
         timer.delay_ms(800);    
         uint32_t steps_curr = control_loop.steps;   
 
         uint32_t sps = (float)(steps_curr - steps_prev)*(1000.0f/800.0f);
+        
+        float w     = motor_control.state.x_omega_est;
+        float radius = sgn(w)*motor_control.state.x_vel_est /(abs(w) + 0.00001f); 
 
         terminal << "sps "<< sps << "\n";   
 
         terminal << "distance "<< motor_control.state.x_dist_est*1000.0f << "\n";
-        terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";    
+        terminal << "velocity "<< motor_control.state.x_vel_est*1000.0f  << "\n";
+        terminal << "angle    "<< motor_control.state.x_theta_est*180.0f/PI << "\n";
+        terminal << "omega    "<< motor_control.state.x_omega_est*180.0f/PI << "\n";  
+        terminal << "radius   "<< radius*1000.0f << "\n";     
 
         terminal << "\n\n"; 
     }

@@ -9,6 +9,8 @@ void LED::init()
     led_3 = 1;
     led_4 = 1;
     led_5 = 1;
+
+    counter = 0;
 }
 
 void LED::on(LedId id)
@@ -44,4 +46,19 @@ void LED::set(LedId id, int value)
         case RIGHT_BLUE:  led_5 = value; break;
         default: break;
     }
+}
+
+
+void LED::led_blink(LedId id)
+{
+    if (counter % 2 == 0)
+    {
+        this->on(id);
+    }
+    else
+    {
+        this->off(id);
+    }
+   
+    counter++;
 }
