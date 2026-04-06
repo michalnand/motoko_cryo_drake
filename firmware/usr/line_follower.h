@@ -29,6 +29,8 @@ class LineFollower
         float speed_min, speed_max;
         float r_min,  r_max;
         float qr_max, qr_min;
+
+        float position_prev;
 };
 
 #endif

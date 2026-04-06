@@ -14,14 +14,16 @@ void LineFollower::init()
     */ 
 
 
-    this->speed_min = 0.6f;     
-    this->speed_max = 1.5f; 
+    this->speed_min = 0.7f;        
+    this->speed_max = 2.0f;     
 
-    this->r_min   = 0.04f;
+    this->r_min   = 0.04f;    
     this->r_max   = 1.0f;   
 
-    this->qr_max  = 2.0f;            
-    this->qr_min  = 0.25f; 
+    this->qr_max  = 0.4f;                 
+    this->qr_min  = 0.25f;    
+
+    this->position_prev = 0;
 
 
     // init main position control loop
@@ -73,8 +75,11 @@ void LineFollower::line_follow()
     //if quality is high (close to 1), increase radius - allows faster speed
     float kr = q*this->qr_max + (1.0f - q)*this->qr_min;  
     radius = kr*radius; 
-    radius = -sgn(position)*clip(radius, r_min, r_max);
 
+    radius = -sgn(position)*clip(radius, r_min, r_max);
+    
+    radius+= 2.0*(position - position_prev);
+    position_prev = position; 
 
     //if quality is high (close to 1), use higher speed
     float speed = (1.0f - q)*this->speed_min + q*this->speed_max;  
