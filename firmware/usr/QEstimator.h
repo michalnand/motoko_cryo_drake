@@ -10,8 +10,8 @@ class QEstimator
     public:
         QEstimator()
         {
-            init(1.0, 0.0, 0.0);
-        }
+            init(1.0, 1.0, 0.0);    
+        }   
 
         void init(float k0, float k1, float k2)
         {
@@ -32,10 +32,10 @@ class QEstimator
         {
             this->distance.init(0);
             this->line_sensor.init(1);
-            this->radius.init(1000);    
+            this->radius.init(1000);      
         }
 
-        void add(float distance, float line_sensor, float radius, float ds = 5.0)
+        void add(float distance, float line_sensor, float radius, float ds = 0.01f)
         {
             if (distance >= (this->d_curr + ds))
             {
@@ -87,8 +87,8 @@ class QEstimator
 
             for (unsigned int i = 0; i < window_size-1; i++)
             {
-                float dx = abs(this->distance[i]    - this->distance[i+1]);
-                float dy = abs(this->line_sensor[i] - this->line_sensor[i+1]);
+                float dx = abs(this->distance[i]    - this->distance[i+1]);     
+                float dy = abs(this->line_sensor[i] - this->line_sensor[i+1])*0.5f*SENSORS_BRACE*0.001f;
 
                 float tmp = dy/(dx + 0.000001f);
 

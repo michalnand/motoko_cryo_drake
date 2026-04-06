@@ -5,12 +5,27 @@
 
 #include "control_loop.h"
 
+#include "line_follower.h"
+
+
 int main()
 {
 
     LibsDriversInit();
 
     terminal << "machine ready\n";
+
+
+    LineFollower line_follower;
+    line_follower.init();
+    
+
+    key_wait();     
+
+
+    turbine_on();   
+
+    line_follower.run();
 
     // sensors_test();
     //encoder_test();   
@@ -24,8 +39,8 @@ int main()
     // init position control loop
     
     
-    ControlLoop control_loop;
-    control_loop.init();
+    //ControlLoop control_loop;
+    //control_loop.init();
 
     /*
     while (1) 
@@ -53,6 +68,7 @@ int main()
     }
     */
 
+    /*
     while (1)
     {
         control_loop.set_circle_motion(0.18f, 0.5f);
@@ -76,6 +92,7 @@ int main()
 
         terminal << "\n\n"; 
     }
+    */
     
     /*
     turbine_on();

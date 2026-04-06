@@ -2,18 +2,26 @@
 
 void LineFollower::init()
 {
-    this->speed_min = 400.0;     
+    /*
+    this->speed_min = 0.4f;     
+    this->speed_max = 1.5f;
 
-    //this->speed_max = 400.0;
-    this->speed_max = 600.0;
-    //this->speed_max = 800.0;
-    //this->speed_max = 1000.0;
-    //this->speed_max = 1200.0;   
-        
-    this->r_min   = 80.0;
-    this->r_max   = 10000.0;
-    this->qr_max  = 10.0;         
-    this->qr_min  = 2.0;  
+    this->r_min   = 0.04f;
+    this->r_max   = 1.0f;   
+
+    this->qr_max  = 1.0f;            
+    this->qr_min  = 0.25f;  
+    */ 
+
+
+    this->speed_min = 0.6f;     
+    this->speed_max = 1.5f; 
+
+    this->r_min   = 0.04f;
+    this->r_max   = 1.0f;   
+
+    this->qr_max  = 2.0f;            
+    this->qr_min  = 0.25f; 
 
 
     // init main position control loop
@@ -26,8 +34,10 @@ void LineFollower::run()
 {
     q_estimator.reset();
 
+   
     while (1)   
     {
+      /*
         // lost line search
         while (sensors.line_lost_type != LINE_LOST_NONE)   
         {
@@ -38,9 +48,10 @@ void LineFollower::run()
           q_estimator.reset(); 
         }   
 
+      */
 
-        // main line following
-        line_follow();
+      // main line following
+      line_follow();
     }
 }
 
@@ -48,34 +59,45 @@ void LineFollower::run()
 void LineFollower::line_follow()
 {
     // main line following  
-    
-    //float position = 0.4*sensors.center_position;    
-    float position = 0.4*sensors.right_position;    
-    //float position = sensors.center_position;    
+    float position = sensors.right_position;   
+    float radius   = estimate_turn_radius(position);    
 
-    float radius  = estimate_turn_radius(position, 1.0f/r_max);
-    radius = -sgn(position)*clip(radius, r_min*0.1f, r_max);    
-
+    // line quality estimation
     float d = control_loop.get_distance(); 
     q_estimator.add(d, sensors.center_position, radius);
 
     // estimate line straightness
     float q = q_estimator.process();
 
-    // obstacle warning, slow down TODO
-    /*
-    if (obstacle != 0)
-    {
-        q = 0.0;  
-    }
-    */
 
     //if quality is high (close to 1), increase radius - allows faster speed
     float kr = q*this->qr_max + (1.0f - q)*this->qr_min;  
     radius = kr*radius; 
-    
+    radius = -sgn(position)*clip(radius, r_min, r_max);
+
+
     //if quality is high (close to 1), use higher speed
     float speed = (1.0f - q)*this->speed_min + q*this->speed_max;  
+    
+    
+    control_loop.set_circle_motion(radius, speed);
+    timer.delay_ms(4); 
+}
+
+void LineFollower::line_follow_basic()
+{
+    //float position = 0.4*sensors.center_position;    
+    //float position = 0.4*sensors.right_position;    
+    float position = sensors.center_position;   
+    
+    
+    float speed = this->speed_min;       
+
+    float radius  = 0.25*estimate_turn_radius(position);  
+    
+    radius = -sgn(position)*clip(radius, r_min, r_max);
+        
+    terminal << position << " " << radius << "\n";
 
     control_loop.set_circle_motion(radius, speed);
     timer.delay_ms(4); 
@@ -259,12 +281,13 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
 }
 
 
-float LineFollower::estimate_turn_radius(float sensor_reading, float eps)
+float LineFollower::estimate_turn_radius(float sensor_reading)
 {
-  float x = SENSORS_DISTANCE;
-  float y = 0.5f*SENSORS_BRACE*abs(sensor_reading);
+  float radius;
+  float x = SENSORS_DISTANCE*0.001f;  
+  float y = 0.5f*SENSORS_BRACE*0.001f*abs(sensor_reading);
 
-  float r = (y*y + x*x)/(2.0f*y + eps);
+  float r = (y*y + x*x)/(2.0f*y + 0.0001f);
 
   return r;
 }

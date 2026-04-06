@@ -5,12 +5,14 @@
 #include <common.h>
 
 #include "led.h"
+#include "key.h"
 #include "motor_pwm.h"  
 #include "motor_control_bldc.h"
 
 #include "sensors.h"
 
 #include "turbine.h"
+
 
 
 // availible from all files

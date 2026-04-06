@@ -15,15 +15,16 @@ class LineFollower
 
     private:
         void line_follow();
+        void line_follow_basic();
         void line_search(uint32_t line_lost_type, float curvature);
         //void obstacle_avoid();
         //void curtain_avoid();
-        float estimate_turn_radius(float sensor_reading, float eps);
+        float estimate_turn_radius(float sensor_reading);
 
 
     private:
         ControlLoop control_loop;
-        QEstimator<10> q_estimator;
+        QEstimator<20> q_estimator;
 
         float speed_min, speed_max;
         float r_min,  r_max;

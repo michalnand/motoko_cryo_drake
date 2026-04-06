@@ -44,9 +44,9 @@ void turbine_set(uint32_t pwm)
 } 
 
 
-void turbine_on()
+void turbine_on()   
 {
-    uint32_t turbine_power = 30;
+    uint32_t turbine_power = 10;
     for (uint32_t n = 0; n < 10; n++)    
     {
         uint32_t pwm = ((n+1)*turbine_power)/10;

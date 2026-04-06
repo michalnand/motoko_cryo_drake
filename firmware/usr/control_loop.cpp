@@ -123,7 +123,7 @@ void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, 
     float a_new = a + w_req*dt;
 
     position_controller.set_xr_constant(x_new, a_new);
-}
+}   
 
 
 
@@ -148,6 +148,8 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
     float req_x     = x;
     float req_angle = a;
 
+    float r_req_safe = sgn(r_req)*max(abs(r_req), 0.01f);
+
     for (unsigned int n = 0; n < MPC_PREDCTION_HORIZON; n++)
     {
         // update velocity with acceleration, and constrains
@@ -156,7 +158,7 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
 
         //split velocity to tangential and angular components
         float vc = v_curr;  
-        float va = v_curr/r_req;    
+        float va = v_curr/r_req_safe;    
         
         // calculate motion change
         req_x+= vc*dt;
