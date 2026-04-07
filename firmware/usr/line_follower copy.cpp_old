@@ -17,17 +17,19 @@ void LineFollower::init()
     this->speed_min = 0.7f;        
     this->speed_max = 2.0f;     
 
-    this->kp_max    = 1.0f;
-    this->kp_min    = 0.25f; 
+    this->r_min   = 0.04f;    
+    this->r_max   = 1.0f;   
 
-    this->kd_max    = 2.0f;
-    this->kd_min    = 2.0f;
-   
+    this->qr_max  = 0.4f;                 
+    this->qr_min  = 0.25f;    
+
     this->position_prev = 0;
 
 
     // init main position control loop
     control_loop.init();
+
+    
 }
 
 void LineFollower::run()
@@ -58,41 +60,33 @@ void LineFollower::run()
 
 void LineFollower::line_follow()
 {
-    //main line following with quality estimation
-    float position = sensors.right_position;
+    // main line following  
+    float position = sensors.right_position;   
+    float radius   = estimate_turn_radius(position);   
+    
+    // signed radius, positive for left turn, negative for right turn
+    radius = -sgn(position)*clip(radius, r_min, r_max);
 
     // line quality estimation
     float d = control_loop.get_distance(); 
-    q_estimator.add(d, sensors.center_position, 0.01f);
+    q_estimator.add(d, sensors.center_position, radius);
 
     // estimate line straightness
     float q = q_estimator.process();
 
-    // lifted state vector z, koopman lifted state, with nonlinear features
-    Vector<float, 8> z;
 
-    z[0] = q;
-    z[1] = 1.0f - q;
-    z[2] = position;
-    z[3] = position - position_prev;
-    z[4] = q*position;
-    z[5] = q*(position - position_prev);
-    z[6] = (1.0f - q)*position;
-    z[7] = (1.0f - q)*(position - position_prev);
+    //if quality is high (close to 1), increase radius - allows faster speed
+    float kr = q*this->qr_max + (1.0f - q)*this->qr_min;  
+    radius = kr*radius;     
+    
+    radius+= 2.0*(position - position_prev);
+    position_prev = position; 
 
-    position_prev = position;
-
-    // apply koopman operator
-
-    // speed estimating is simple, proportional to line quality, with min and max limits
-    float speed    = z[0]*speed_max + z[1]*speed_min;
-
-    // steering is gain scheduled PD control, with gains depending on line quality
-    float steering = z[4]*kp_max + z[6]*kp_min + z[5]*kd_max + z[7]*kd_min;
-
-    // apply control to path planner and MPC, 
-    // internally converted to turn radius and speed, motion on circle    
-    control_loop.set_turn_motion(steering, speed);
+    //if quality is high (close to 1), use higher speed
+    float speed = (1.0f - q)*this->speed_min + q*this->speed_max;  
+    
+    
+    control_loop.set_circle_motion(radius, speed);
     timer.delay_ms(4); 
 }
 
@@ -105,12 +99,13 @@ void LineFollower::line_follow_basic()
     
     float speed = this->speed_min;       
 
-    float turn  = 0.25*(position);  
+    float radius  = 0.25*estimate_turn_radius(position);  
     
-  
-    terminal << position << " " << turn << "\n";
+    radius = -sgn(position)*clip(radius, r_min, r_max);
+        
+    terminal << position << " " << radius << "\n";
 
-    control_loop.set_turn_motion(turn, speed);
+    control_loop.set_circle_motion(radius, speed);
     timer.delay_ms(4); 
 }
 
@@ -289,4 +284,16 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
           }
         }
     }
+}
+
+
+float LineFollower::estimate_turn_radius(float sensor_reading)
+{
+  float radius;
+  float x = SENSORS_DISTANCE*0.001f;  
+  float y = 0.5f*SENSORS_BRACE*0.001f*abs(sensor_reading);
+
+  float r = (y*y + x*x)/(2.0f*y + 0.0001f);
+
+  return r;
 }

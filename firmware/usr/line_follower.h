@@ -19,7 +19,7 @@ class LineFollower
         void line_search(uint32_t line_lost_type, float curvature);
         //void obstacle_avoid();
         //void curtain_avoid();
-        float estimate_turn_radius(float sensor_reading);
+        //float estimate_turn_radius(float sensor_reading);
 
 
     private:
@@ -27,8 +27,9 @@ class LineFollower
         QEstimator<20> q_estimator;
 
         float speed_min, speed_max;
-        float r_min,  r_max;
-        float qr_max, qr_min;
+        
+        float kp_min, kp_max;
+        float kd_min, kd_max;
 
         float position_prev;
 };

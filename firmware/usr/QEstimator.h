@@ -32,17 +32,15 @@ class QEstimator
         {
             this->distance.init(0);
             this->line_sensor.init(1);
-            this->radius.init(1000);      
         }
 
-        void add(float distance, float line_sensor, float radius, float ds = 0.01f)
+        void add(float distance, float line_sensor, float ds)
         {
             if (distance >= (this->d_curr + ds))
             {
                 // add into buffer
                 this->distance.add(distance);
                 this->line_sensor.add(line_sensor);
-                this->radius.add(radius);
 
                 this->d_curr = distance;
             }
@@ -138,19 +136,6 @@ class QEstimator
         }
 
 
-        float get_radius()
-        {
-            float r_sum = 0.0;
-
-            for (unsigned int i = 0; i < radius.size(); i++)
-            {
-                r_sum+= this->radius[i];
-            }   
-
-            float result = r_sum/radius.size();
-
-            return result;
-        }
 
     
     public:
@@ -162,7 +147,6 @@ class QEstimator
         
         FifoBuffer<float, window_size> distance;
         FifoBuffer<float, window_size> line_sensor;
-        FifoBuffer<float, window_size/4> radius;
 };
 
 

@@ -22,6 +22,7 @@ class ControlLoop
 
         void set_position(float distance_target, float angle_target);
         void set_circle_motion(float radius_target, float velocity_target);
+        void set_turn_motion(float steering, float velocity_target);
 
         float get_distance();
         float get_angle();
@@ -41,6 +42,7 @@ class ControlLoop
         PositionController position_controller;
     
     private:
+        float   r_min, r_max;
         float   distance_target, angle_target;
         float   radius_target, velocity_target;
         bool    position_mode;
