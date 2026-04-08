@@ -3,26 +3,53 @@
 void LineFollower::init()
 {
     /*
-    this->speed_min = 0.4f;     
-    this->speed_max = 1.5f;
+    // baseline, no turbine
+    this->speed_min = 0.5f;          
+    this->speed_max = 1.0f;     
 
-    this->r_min   = 0.04f;
-    this->r_max   = 1.0f;   
+    this->kp_max    = 2.0f;   
+    this->kp_min    = 4.0f; 
 
-    this->qr_max  = 1.0f;            
-    this->qr_min  = 0.25f;  
-    */ 
+    this->kd_max    = 4.0f;
+    this->kd_min    = 4.0f;  
+    */
+
+    /*
+    // fast run, no turbine
+    this->speed_min = 0.5f;          
+    this->speed_max = 1.5f;       
+
+    this->kp_max    = 1.0f;     
+    this->kp_min    = 4.0f; 
+
+    this->kd_max    = 4.0f;
+    this->kd_min    = 4.0f;
+    */
+
+    /*
+    // fast run, turbine
+    this->speed_min = 0.6f;          
+    this->speed_max = 2.0f;        
+
+    this->kp_max    = 1.0f;     
+    this->kp_min    = 2.0f;   
+
+    this->kd_max    = 4.0f;
+    this->kd_min    = 4.0f;
+    */
 
 
-    this->speed_min = 0.7f;        
-    this->speed_max = 2.0f;     
+    // fast run, turbine turbo
+    this->speed_min = 0.6f;          
+    this->speed_max = 2.8f;          
 
-    this->kp_max    = 1.0f;
-    this->kp_min    = 0.25f; 
+    this->kp_max    = 1.0f;     
+    this->kp_min    = 2.0f;   
 
-    this->kd_max    = 2.0f;
-    this->kd_min    = 2.0f;
-   
+    this->kd_max    = 4.0f;
+    this->kd_min    = 4.0f;
+
+
     this->position_prev = 0;
 
 
@@ -51,6 +78,7 @@ void LineFollower::run()
       */
 
       // main line following
+      //line_follow_basic();
       line_follow();
     }
 }
@@ -59,7 +87,7 @@ void LineFollower::run()
 void LineFollower::line_follow()
 {
     //main line following with quality estimation
-    float position = sensors.right_position;
+    float position = sensors.center_position;
 
     // line quality estimation
     float d = control_loop.get_distance(); 
@@ -75,12 +103,12 @@ void LineFollower::line_follow()
     z[1] = 1.0f - q;
     z[2] = position;
     z[3] = position - position_prev;
-    z[4] = q*position;
+    z[4] = q*position;  
     z[5] = q*(position - position_prev);
     z[6] = (1.0f - q)*position;
     z[7] = (1.0f - q)*(position - position_prev);
 
-    position_prev = position;
+    position_prev = position;   
 
     // apply koopman operator
 
@@ -89,6 +117,8 @@ void LineFollower::line_follow()
 
     // steering is gain scheduled PD control, with gains depending on line quality
     float steering = z[4]*kp_max + z[6]*kp_min + z[5]*kd_max + z[7]*kd_min;
+
+    //terminal << position << " " << q << " " << speed << " " << steering << "\n";  
 
     // apply control to path planner and MPC, 
     // internally converted to turn radius and speed, motion on circle    
@@ -105,8 +135,8 @@ void LineFollower::line_follow_basic()
     
     float speed = this->speed_min;       
 
-    float turn  = 0.25*(position);  
-    
+    float turn  = 1.5f*position;  
+
   
     terminal << position << " " << turn << "\n";
 

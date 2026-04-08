@@ -32,7 +32,7 @@ int ControlLoop::init()
     this->steps = 0;    
 
     this->r_min = 0.04f;
-    this->r_max = 2.0f;
+    this->r_max = 1.0f; 
 
     
     // shapers init, smooth run
@@ -66,22 +66,19 @@ void ControlLoop::set_position(float distance_target, float angle_target)
 void ControlLoop::set_circle_motion(float radius_target, float velocity_target)
 {
     this->velocity_target   = velocity_target;
-    this->radius_target     = radius_target;
+    this->radius_target     = -radius_target;
 
     this->position_mode = false;
 }
 
 void ControlLoop::set_turn_motion(float steering, float velocity_target)
 {
-    // convert steering to circle radius
-    float x = SENSORS_DISTANCE*0.001f;  
-    float y = 0.5f*SENSORS_BRACE*0.001f*abs(steering);
+    steering = clip(steering, -1.0f, 1.0f);     
 
-    float r = (y*y + x*x)/(2.0f*y + 0.0001f);
+    float k = abs(steering);
+    float r = (1.0f - k)*this->r_max + k*this->r_min;
 
-    // radius sign determines turn direction
-    r = sgn(steering)*clip(r, this->r_min, this->r_max);
-
+    r = sgn(steering)*r;      
     this->set_circle_motion(r, velocity_target);
 }
 

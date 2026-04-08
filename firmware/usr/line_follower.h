@@ -24,7 +24,7 @@ class LineFollower
 
     private:
         ControlLoop control_loop;
-        QEstimator<20> q_estimator;
+        QEstimator<16> q_estimator;
 
         float speed_min, speed_max;
         
