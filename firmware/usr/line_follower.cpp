@@ -59,6 +59,18 @@ void LineFollower::init(uint32_t mode)
     this->position_prev = 0;
 
 
+
+
+    this->obstacle_idx = 0;
+    obstacle_map.set(true);
+
+    
+    obstacle_map[0] = true;
+    obstacle_map[1] = false;
+    obstacle_map[2] = false;
+    obstacle_map[3] = true;
+
+
     // init main position control loop
     control_loop.init();
 }
@@ -76,6 +88,33 @@ void LineFollower::run()
    
     while (1)   
     {
+
+      // obstacle avoiding
+      int obstacle = sensors.obstacle_detected;
+
+      if (obstacle == 2)
+      { 
+        led.all_off();
+        led.on(LED::RIGHT_RED); 
+        led.on(LED::LEFT_RED);  
+
+        if (obstacle_map[this->obstacle_idx] == true)
+        {
+          //TODO
+          //obstacle_avoid(); 
+        }
+        else
+        {
+          //TODO
+          //curtain_avoid();
+        } 
+
+        q_estimator.reset();
+
+        this->obstacle_idx = (this->obstacle_idx+1)%obstacle_map.size();
+      }
+
+
       // lost line search
       while (sensors.line_lost_type != LINE_LOST_NONE)   
       {
@@ -90,6 +129,7 @@ void LineFollower::run()
         q_estimator.reset(); 
       }   
 
+        
       // main line following
       led.all_off();
       led.on(LED::RIGHT_BLUE);

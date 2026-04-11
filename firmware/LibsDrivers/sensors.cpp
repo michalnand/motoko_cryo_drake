@@ -67,6 +67,8 @@ int Sensors::init()
     this->right_proximity = 0.0f;
     this->front_right_proximity = 0.0f;
 
+    this->obstacle_detected = 0;
+
 
     // hardware init 
     i2c.init();

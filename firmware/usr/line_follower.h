@@ -34,6 +34,9 @@ class LineFollower
         float position_prev;
 
         bool turbine_enabled;
+
+        uint32_t obstacle_idx;
+        Array<bool, 4> obstacle_map;
 };
 
 #endif

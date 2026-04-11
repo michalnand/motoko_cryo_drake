@@ -46,6 +46,8 @@ class Sensors
 
         void callback();
 
+        
+
     private:
         void line_sensor_process();
         void proximity_sensor_process();
@@ -79,7 +81,8 @@ class Sensors
     public:
         float front_left_proximity, left_proximity, right_proximity, front_right_proximity;
 
-
+        int obstacle_detected;
+        
     public:
         Array<int, LINE_SENSOR_COUNT> line_reading_result;
         Array<int, LINE_SENSOR_COUNT> weights;
