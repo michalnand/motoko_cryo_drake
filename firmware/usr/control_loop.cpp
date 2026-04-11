@@ -66,7 +66,7 @@ void ControlLoop::set_position(float distance_target, float angle_target)
 void ControlLoop::set_circle_motion(float radius_target, float velocity_target)
 {
     this->velocity_target   = velocity_target;
-    this->radius_target     = -radius_target;
+    this->radius_target     = radius_target;
 
     this->position_mode = false;
 }

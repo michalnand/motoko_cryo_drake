@@ -1,8 +1,11 @@
 #include "line_follower.h"
 
-void LineFollower::init()
+void LineFollower::init(uint32_t mode)
 {
-    /*
+  this->turbine_enabled = false;
+
+  if (mode == 0)
+  {
     // baseline, no turbine
     this->speed_min = 0.5f;          
     this->speed_max = 1.0f;     
@@ -12,33 +15,36 @@ void LineFollower::init()
 
     this->kd_max    = 4.0f;
     this->kd_min    = 4.0f;  
-    */
-
-    /*
+  }
+  else if (mode == 1)
+  { 
     // fast run, no turbine
     this->speed_min = 0.5f;          
-    this->speed_max = 1.5f;       
+    this->speed_max = 1.2f;        
 
-    this->kp_max    = 1.0f;     
+    this->kp_max    = 2.0f;     
     this->kp_min    = 4.0f; 
 
     this->kd_max    = 4.0f;
     this->kd_min    = 4.0f;
-    */
+  }
 
-    /*
+  else if (mode == 2)   
+  { 
     // fast run, turbine
     this->speed_min = 0.6f;          
-    this->speed_max = 2.0f;        
+    this->speed_max = 1.5f;        
 
-    this->kp_max    = 1.0f;     
-    this->kp_min    = 2.0f;   
+    this->kp_max    = 1.0f;        
+    this->kp_min    = 3.0f;         
 
     this->kd_max    = 4.0f;
     this->kd_min    = 4.0f;
-    */
 
+    this->turbine_enabled = true;
+  }
 
+    /*  
     // fast run, turbine turbo
     this->speed_min = 0.6f;          
     this->speed_max = 2.8f;          
@@ -48,7 +54,7 @@ void LineFollower::init()
 
     this->kd_max    = 4.0f;
     this->kd_min    = 4.0f;
-
+    */
 
     this->position_prev = 0;
 
@@ -59,26 +65,39 @@ void LineFollower::init()
 
 void LineFollower::run()
 {
+    if (this->turbine_enabled)
+    {
+        turbine_on();
+    }
+
+      
     q_estimator.reset();
 
    
     while (1)   
     {
-      /*
-        // lost line search
-        while (sensors.line_lost_type != LINE_LOST_NONE)   
-        {
-          float curvature = q_estimator.get_curvature();
+      // lost line search
+      while (sensors.line_lost_type != LINE_LOST_NONE)   
+      {
+        led.all_off();
+        led.on(LED::RIGHT_GREEN); 
+        led.on(LED::LEFT_GREEN);
 
-          line_search(sensors.line_lost_type, curvature);
+        float curvature = q_estimator.get_curvature();
 
-          q_estimator.reset(); 
-        }   
+        line_search(sensors.line_lost_type, curvature);
 
-      */
+        q_estimator.reset(); 
+      }   
 
       // main line following
-      //line_follow_basic();
+      led.all_off();
+      led.on(LED::RIGHT_BLUE);
+      led.on(LED::LEFT_BLUE);
+
+      //control_loop.set_circle_motion(1.0, 0.0f);
+      //timer.delay_ms(4);
+
       line_follow();
     }
 }
@@ -124,6 +143,7 @@ void LineFollower::line_follow()
     // internally converted to turn radius and speed, motion on circle    
     control_loop.set_turn_motion(steering, speed);
     timer.delay_ms(4); 
+
 }
 
 void LineFollower::line_follow_basic()
@@ -147,57 +167,35 @@ void LineFollower::line_follow_basic()
 
 void LineFollower::line_search(uint32_t line_lost_type, float curvature)
 {
-    float turn_search_distance      = 60.0f;
-    float forward_search_distance   = 70.0f;
+    float turn_search_distance      = 0.15f;  
+    float forward_search_distance   = 0.07f;
 
-    float r_search  = 90.0f; 
-    float r_max     = 10000.0f;
+    float r_search  = 0.04f; 
+    float r_max     = 1.0f;
 
-    float speed     = 500.0f;
-
+    float speed     = 0.4f;
+  
     int state       = 2;
     int way         = 1; 
 
-    /*
-    if (line_lost_type == LINE_LOST_LEFT)
-    {
-      way   = 1;
-      state = 0;
-    }
-    else if (line_lost_type == LINE_LOST_RIGHT)
-    {
-      way   = -1;
-      state = 0;  
-    }   
-    else
-    {   
-      if (curvature > 0)
-      {
-        way = 1;
-      }
-      else
-      {
-        way = -1;
-      }
-      
-      state = 2;
-    } 
-    */
+    terminal << line_lost_type << " "  << curvature << " " << "\n";
+
 
     if (line_lost_type == LINE_LOST_LEFT)
     {
       way   = 1;
       //state = 3;
-      state = 2;
+      state = 0;  
     }
     else if (line_lost_type == LINE_LOST_RIGHT)
     {
       way   = -1;
       //state = 3;  
-      state = 2;
+      state = 0;
     }   
     else
     {   
+      // middle lost line, state = 2, search forward
       if (curvature > 0)
       {
         way = 1;
@@ -211,23 +209,23 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
     } 
 
 
-  
+    
     while (true)
     {
         // left or right line searching
         if (state == 0 || state == 1)
         {
+            /*
             // stop motors
             float d_target  = control_loop.get_distance();
             float a_target  = control_loop.get_angle();
 
-            while (control_loop.get_velocity() > 10.0f)
+            while (control_loop.get_velocity() > 0.01f)
             { 
                 control_loop.set_position(d_target, a_target);
                 timer.delay_ms(4);      
-
-                led.led_blink(LED::LEFT_RED);
             }   
+            */  
 
             //turn until line found, or distance trehold
             float start_distance      = control_loop.get_distance();
@@ -235,30 +233,25 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
 
             while (control_loop.get_distance() < target_distance)
             { 
-                control_loop.set_circle_motion(way*r_search, 0.25f*speed);
+                control_loop.set_turn_motion(way, speed);
                 timer.delay_ms(4);         
 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
                 {
                   return; 
-                } 
-
-                led.led_blink(LED::LEFT_RED);
-            }       
+                }   
+            }         
 
             while (control_loop.get_distance() > start_distance)
             { 
-                control_loop.set_circle_motion(way*r_search, -0.25f*speed);
+                control_loop.set_turn_motion(way, -speed);
                 timer.delay_ms(4);    
                 
                 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
                 {
                   return;
-                }
-                
-
-                led.led_blink(LED::LEFT_RED);
+                }                
             }     
 
             way*= -1;
@@ -282,8 +275,6 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
                 {
                   return; 
                 }
-
-                led.led_blink(LED::LEFT_RED);
             }       
             
             state = 0;  
@@ -308,8 +299,6 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
                 {
                   return; 
                 }   
- 
-                led.led_blink(LED::LEFT_RED);
             }  
 
             way = -way;

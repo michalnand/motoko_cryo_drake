@@ -54,7 +54,7 @@ void turbine_on()
         timer.delay_ms(100);  
     }  
 
-    timer.delay_ms(200);    
+    timer.delay_ms(500);          
 }
 
 void turbine_off()

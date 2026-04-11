@@ -9,7 +9,7 @@
 class LineFollower
 {
     public:
-        void init();
+        void init(uint32_t mode);
         void run();
 
 
@@ -32,6 +32,8 @@ class LineFollower
         float kd_min, kd_max;
 
         float position_prev;
+
+        bool turbine_enabled;
 };
 
 #endif

@@ -36,16 +36,16 @@ int Sensors::init()
     this->measurement_id = 0;   
 
     // line sensor vars init
-    weights[0] =  5*LINE_SENSOR_STEP;
-    weights[1] =  4*LINE_SENSOR_STEP;
-    weights[2] =  3*LINE_SENSOR_STEP; 
-    weights[3] =  2*LINE_SENSOR_STEP;
-    weights[4] =  1*LINE_SENSOR_STEP;
-    weights[5] = -1*LINE_SENSOR_STEP;
-    weights[6] = -2*LINE_SENSOR_STEP;
-    weights[7] = -3*LINE_SENSOR_STEP;
-    weights[8] = -4*LINE_SENSOR_STEP;
-    weights[9] = -5*LINE_SENSOR_STEP;
+    weights[0] = -5*LINE_SENSOR_STEP;
+    weights[1] = -4*LINE_SENSOR_STEP;
+    weights[2] = -3*LINE_SENSOR_STEP; 
+    weights[3] = -2*LINE_SENSOR_STEP;
+    weights[4] = -1*LINE_SENSOR_STEP;
+    weights[5] =  1*LINE_SENSOR_STEP;
+    weights[6] =  2*LINE_SENSOR_STEP;
+    weights[7] =  3*LINE_SENSOR_STEP;
+    weights[8] =  4*LINE_SENSOR_STEP;
+    weights[9] =  5*LINE_SENSOR_STEP;
 
     this->sensor_status = 0;
     this->line_lost_type = LINE_LOST_CENTER;
@@ -170,13 +170,13 @@ void Sensors::line_sensor_process()
     //solve if line lost
     if ((left_valid == false) && (right_valid == false))
     {
-        if (left_position_tmp < -0.6)
+        if (left_position_tmp < -0.4)   
+        {
+            line_lost_type = LINE_LOST_RIGHT;   
+        }
+        else if (left_position_tmp > 0.4) 
         {
             line_lost_type = LINE_LOST_LEFT;
-        }
-        else if (left_position_tmp > 0.6) 
-        {
-            line_lost_type = LINE_LOST_RIGHT;
         }
         else
         {

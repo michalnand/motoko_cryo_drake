@@ -14,7 +14,8 @@
 #define LINE_SENSOR_STEP                ((int32_t)128)
 
 //sensitivity, higher value less sensitive
-#define LINE_SENSOR_THRESHOLD           ((int32_t)2800)   
+//#define LINE_SENSOR_THRESHOLD           ((int32_t)2800)   
+#define LINE_SENSOR_THRESHOLD           ((int32_t)2000)   
 
     
 

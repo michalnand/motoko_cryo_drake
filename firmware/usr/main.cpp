@@ -17,13 +17,12 @@ int main()
 
 
     LineFollower line_follower;
-    line_follower.init();
+    line_follower.init(2);
     
 
     key_wait();     
 
 
-    turbine_on();   
 
     line_follower.run();
 
