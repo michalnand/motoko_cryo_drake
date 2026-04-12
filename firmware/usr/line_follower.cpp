@@ -7,8 +7,11 @@ void LineFollower::init(uint32_t mode)
   if (mode == 0)
   {
     // baseline, no turbine
-    this->speed_min = 0.5f;          
-    this->speed_max = 1.0f;     
+    //this->speed_min = 0.5f;          
+    //this->speed_max = 1.0f;     
+
+    this->speed_min = 0.3f;          
+    this->speed_max = 0.3f;     
 
     this->kp_max    = 2.0f;   
     this->kp_min    = 4.0f; 
@@ -72,7 +75,7 @@ void LineFollower::init(uint32_t mode)
 
 
     // init main position control loop
-    control_loop.init();
+    control_loop.init();  
 }
 
 void LineFollower::run()
@@ -88,7 +91,7 @@ void LineFollower::run()
    
     while (1)   
     {
-
+      /*
       // obstacle avoiding
       int obstacle = sensors.obstacle_detected;
 
@@ -123,6 +126,7 @@ void LineFollower::run()
 
         q_estimator.reset();
       }
+      */
 
       // lost line search
       while (sensors.line_lost_type != LINE_LOST_NONE)   
@@ -147,7 +151,7 @@ void LineFollower::run()
       //control_loop.set_circle_motion(1.0, 0.0f);
       //timer.delay_ms(4);
 
-      //line_follow();
+      line_follow();  
     }
 }
 
