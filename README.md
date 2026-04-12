@@ -1,6 +1,7 @@
 # motoko cryo drake - line following robot
 
 robot photos
+
 ![image](doc/images/DSC00440.jpg)
 ![image](doc/images/DSC00461.jpg)
 ![image](doc/images/DSC00470.jpg)
@@ -36,5 +37,7 @@ outer loop
 - analytical MPC
 - constrained path planner
 - koopman operator non linear controller
+
+# block diagram
 
 ![image](doc/diagrams/robot-line_following.png)
