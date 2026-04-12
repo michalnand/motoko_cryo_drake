@@ -15,18 +15,17 @@ int main()
 
     terminal << "machine ready\n";
 
-
-    LineFollower line_follower;
-    line_follower.init(2);
     
-
+    LineFollower line_follower;
+    line_follower.init(0);
+    
+    
     key_wait();     
 
-
-
     line_follower.run();
+        
 
-    // sensors_test();
+    //sensors_test();
     //encoder_test();   
     //motor_foc_test();
 

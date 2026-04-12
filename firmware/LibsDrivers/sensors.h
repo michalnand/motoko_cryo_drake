@@ -17,7 +17,8 @@
 //#define LINE_SENSOR_THRESHOLD           ((int32_t)2800)   
 #define LINE_SENSOR_THRESHOLD           ((int32_t)2000)   
 
-    
+#define PROXIMITY_THRESHOLD             ((float)0.15)
+#define OBSTACLE_THRESHOLD              ((float)0.11)   
 
 //brace from first to last sesor in mm
 #define SENSORS_BRACE                  ((float)90.0)
@@ -82,7 +83,7 @@ class Sensors
         float front_left_proximity, left_proximity, right_proximity, front_right_proximity;
 
         int obstacle_detected;
-        
+
     public:
         Array<int, LINE_SENSOR_COUNT> line_reading_result;
         Array<int, LINE_SENSOR_COUNT> weights;

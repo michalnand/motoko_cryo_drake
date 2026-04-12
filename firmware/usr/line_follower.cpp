@@ -108,12 +108,21 @@ void LineFollower::run()
           //TODO
           //curtain_avoid();
         } 
-
+        
+        // start with lowest speed after obstacle avoiding
         q_estimator.reset();
-
         this->obstacle_idx = (this->obstacle_idx+1)%obstacle_map.size();
       }
+      
+      // obstacle warning, proximity alert, slow down to minimal speed
+      if (obstacle == 1)
+      {
+        led.all_off();
+        led.on(LED::RIGHT_RED); 
+        led.on(LED::LEFT_RED);  
 
+        q_estimator.reset();
+      }
 
       // lost line search
       while (sensors.line_lost_type != LINE_LOST_NONE)   
@@ -124,7 +133,7 @@ void LineFollower::run()
 
         float curvature = q_estimator.get_curvature();
 
-        line_search(sensors.line_lost_type, curvature);
+        //line_search(sensors.line_lost_type, curvature);
 
         q_estimator.reset(); 
       }   
@@ -138,7 +147,7 @@ void LineFollower::run()
       //control_loop.set_circle_motion(1.0, 0.0f);
       //timer.delay_ms(4);
 
-      line_follow();
+      //line_follow();
     }
 }
 

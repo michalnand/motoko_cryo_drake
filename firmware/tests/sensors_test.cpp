@@ -39,6 +39,7 @@ void sensors_test()
     terminal << "left_proximity " << sensors.left_proximity << "\n";
     terminal << "right_proximity " << sensors.right_proximity << "\n";
     terminal << "front_right_proximity " << sensors.front_right_proximity << "\n";
+    terminal << "obstacle_detected " << sensors.obstacle_detected << "\n";
     terminal << "-----------------------------\n\n\n";
     
     timer.delay_ms(500);

@@ -217,27 +217,50 @@ void Sensors::line_sensor_process()
 void Sensors::proximity_sensor_process()
 {
     float k = 0.125;
-
-   
-    
+ 
     {
         float tmp = (4096 - proximity_reading_result[0])/4096.0;
-        this->front_left_proximity = k*tmp + (1.0 - k)*this->front_left_proximity;
+        if (tmp >= 0.0f)
+        {
+            this->front_left_proximity = k*tmp + (1.0 - k)*this->front_left_proximity;
+        }
     }
 
     {
         float tmp = (4096 - proximity_reading_result[1])/4096.0;
-        this->left_proximity = k*tmp + (1.0 - k)*this->left_proximity;
+        if (tmp >= 0.0f)
+        {
+            this->left_proximity = k*tmp + (1.0 - k)*this->left_proximity;
+        }
     }
     
     {
         float tmp = (4096 - proximity_reading_result[2])/4096.0;
-        this->right_proximity = k*tmp + (1.0 - k)*this->right_proximity;
+        if (tmp >= 0.0f)
+        {
+            this->right_proximity = k*tmp + (1.0 - k)*this->right_proximity;
+        }
     }
 
     {
         float tmp = (4096 - proximity_reading_result[3])/4096.0;
-        this->front_right_proximity = k*tmp + (1.0 - k)*this->front_right_proximity;
+        if (tmp >= 0.0f)
+        {
+            this->front_right_proximity = k*tmp + (1.0 - k)*this->front_right_proximity;
+        }
+    }   
+
+    if (this->front_left_proximity < OBSTACLE_THRESHOLD || this->front_right_proximity < OBSTACLE_THRESHOLD)
+    {
+        this->obstacle_detected = 2; // obstacle
+    }
+    else if (this->front_left_proximity < PROXIMITY_THRESHOLD || this->front_right_proximity < PROXIMITY_THRESHOLD || this->left_proximity < PROXIMITY_THRESHOLD || this->right_proximity < PROXIMITY_THRESHOLD)
+    {
+        this->obstacle_detected = 1; // proximity alert
+    }       
+    else
+    {
+        this->obstacle_detected = 0; // no obstacle
     }
 }
    
