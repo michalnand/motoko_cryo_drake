@@ -1,5 +1,8 @@
 #include "line_follower.h"
 
+
+#define DT_MS       ((uint32_t)4)
+
 void LineFollower::init(uint32_t mode)
 {
   this->turbine_enabled = false;
@@ -7,11 +10,8 @@ void LineFollower::init(uint32_t mode)
   if (mode == 0)
   {
     // baseline, no turbine
-    //this->speed_min = 0.5f;          
-    //this->speed_max = 1.0f;     
-
-    this->speed_min = 0.3f;          
-    this->speed_max = 0.3f;     
+    this->speed_min = 0.5f;          
+    this->speed_max = 1.0f;     
 
     this->kp_max    = 2.0f;   
     this->kp_min    = 4.0f; 
@@ -61,17 +61,15 @@ void LineFollower::init(uint32_t mode)
 
     this->position_prev = 0;
 
-
-
-
     this->obstacle_idx = 0;
     obstacle_map.set(true);
 
-    
+    /*
     obstacle_map[0] = true;
     obstacle_map[1] = false;
     obstacle_map[2] = false;
     obstacle_map[3] = true;
+    */
 
 
     // init main position control loop
@@ -91,7 +89,6 @@ void LineFollower::run()
    
     while (1)   
     {
-      /*
       // obstacle avoiding
       int obstacle = sensors.obstacle_detected;
 
@@ -103,13 +100,11 @@ void LineFollower::run()
 
         if (obstacle_map[this->obstacle_idx] == true)
         {
-          //TODO
-          //obstacle_avoid(); 
+          obstacle_avoid(); 
         }
         else
         {
-          //TODO
-          //curtain_avoid();
+          curtain_avoid();
         } 
         
         // start with lowest speed after obstacle avoiding
@@ -126,8 +121,8 @@ void LineFollower::run()
 
         q_estimator.reset();
       }
-      */
-
+      
+      /*
       // lost line search
       while (sensors.line_lost_type != LINE_LOST_NONE)   
       {
@@ -147,11 +142,12 @@ void LineFollower::run()
       led.all_off();
       led.on(LED::RIGHT_BLUE);
       led.on(LED::LEFT_BLUE);
+      */
 
-      //control_loop.set_circle_motion(1.0, 0.0f);
-      //timer.delay_ms(4);
+      //line_follow();  
 
-      line_follow();  
+      control_loop.set_circle_motion(1.0, 0.0f);
+      timer.delay_ms(DT_MS);
     }
 }
 
@@ -195,7 +191,7 @@ void LineFollower::line_follow()
     // apply control to path planner and MPC, 
     // internally converted to turn radius and speed, motion on circle    
     control_loop.set_turn_motion(steering, speed);
-    timer.delay_ms(4); 
+    timer.delay_ms(DT_MS); 
 
 }
 
@@ -214,7 +210,7 @@ void LineFollower::line_follow_basic()
     terminal << position << " " << turn << "\n";
 
     control_loop.set_turn_motion(turn, speed);
-    timer.delay_ms(4); 
+    timer.delay_ms(DT_MS); 
 }
 
 
@@ -276,7 +272,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
             while (control_loop.get_velocity() > 0.01f)
             { 
                 control_loop.set_position(d_target, a_target);
-                timer.delay_ms(4);      
+                timer.delay_ms(DT_MS);      
             }   
             */  
 
@@ -287,7 +283,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
             while (control_loop.get_distance() < target_distance)
             { 
                 control_loop.set_turn_motion(way, speed);
-                timer.delay_ms(4);         
+                timer.delay_ms(DT_MS);         
 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
                 {
@@ -298,7 +294,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
             while (control_loop.get_distance() > start_distance)
             { 
                 control_loop.set_turn_motion(way, -speed);
-                timer.delay_ms(4);    
+                timer.delay_ms(DT_MS);    
                 
                 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
@@ -322,7 +318,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
             while (control_loop.get_distance() < target_distance)
             {   
                 control_loop.set_circle_motion(r_max, speed);
-                timer.delay_ms(4);  
+                timer.delay_ms(DT_MS);  
 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
                 {
@@ -346,7 +342,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
             while (control_loop.get_distance() < target_distance)
             {   
                 control_loop.set_circle_motion(way*r_search, 0.5f*speed_min);
-                timer.delay_ms(4);  
+                timer.delay_ms(DT_MS);  
 
                 if (sensors.line_lost_type == LINE_LOST_NONE)
                 {
@@ -361,4 +357,102 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
           }
         }
     }
+}
+
+
+void LineFollower::obstacle_avoid()
+{
+    float speed = speed_min;  
+    float d_req = 0.85f;     
+    
+    float s_min = 0.1f;
+    float s_max = 0.5f;
+
+    // move back until minimal distance from obstalce reached 
+    {
+      float target_distance = control_loop.get_distance() - 0.01;  
+      
+      while (sensors.obstacle_distance < 0.05 || control_loop.get_distance() > target_distance) 
+      {
+        control_loop.set_turn_motion(0.0f, -speed_min);
+        timer.delay_ms(DT_MS);       
+      }   
+    }
+
+    //turn left, 90degrees 
+    {
+      float distance_target = control_loop.get_distance();
+      float angle_target    = control_loop.get_angle() + 90.0*PI/180.0;
+
+      while (abs(control_loop.get_angle() - angle_target) > 0.02*PI)
+      { 
+        control_loop.set_position(distance_target, angle_target);
+        timer.delay_ms(DT_MS);   
+      } 
+    }
+    
+    
+    //turn around obstacle, circular motion
+    {
+
+      uint32_t state = 0;   
+      float angle_start = control_loop.get_angle();
+      float angle_turn  = -90.0*PI/180.0;
+      
+      while (1)      
+      {
+        if (state == 0 && (control_loop.get_angle() - angle_start) < angle_turn)
+        {
+          state = 1;    
+        }
+        else if (state == 1 && sensors.line_lost_type == LINE_LOST_NONE)
+        {
+          break; 
+        }     
+
+        float diff = d_req - sensors.right_proximity;     
+        
+        float steering = 0.1*diff;  
+
+        steering = sgn(steering)*clip(steering, s_min, s_max);
+        
+        control_loop.set_turn_motion(steering, speed);
+        timer.delay_ms(DT_MS);     
+      }   
+    }
+    
+
+    //turn left, 90degrees 
+    {
+      float distance_target = control_loop.get_distance();
+      float angle_target    = control_loop.get_angle() + 90.0*PI/180.0;
+
+      while (angle_target > control_loop.get_angle())
+      {
+        control_loop.set_position(distance_target, angle_target);
+        timer.delay_ms(DT_MS);   
+      }   
+    }
+}
+
+
+// curtain avoid - slow line following for 25cm, ignore obstacle reading
+void LineFollower::curtain_avoid()
+{
+  float curtain_distance  = 0.25f; 
+  float target_distance   = curtain_distance + control_loop.get_distance();
+
+  float position_prev = sensors.center_position;
+
+  while (control_loop.get_distance() < target_distance)
+  {
+    float position = sensors.center_position;
+
+    // steering with PD control
+    float steering = position*kp_min + (position - position_prev)*kd_min;
+    position_prev = position;
+   
+    control_loop.set_turn_motion(steering, speed_min);
+    timer.delay_ms(DT_MS); 
+  }
 }

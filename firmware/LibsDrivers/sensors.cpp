@@ -66,6 +66,7 @@ int Sensors::init()
     this->left_proximity = 0.0f;
     this->right_proximity = 0.0f;
     this->front_right_proximity = 0.0f;
+    this->obstacle_distance = 0.0f;
 
     this->obstacle_detected = 0;
 
@@ -261,7 +262,10 @@ void Sensors::proximity_sensor_process()
     else
     {
         this->obstacle_detected = 0; // no obstacle
-    }
+    }   
+
+
+    this->obstacle_distance = min(this->front_left_proximity, this->front_right_proximity);
 }
    
 

@@ -16,11 +16,11 @@ class LineFollower
     private:
         void line_follow();
         void line_follow_basic();
+        
         void line_search(uint32_t line_lost_type, float curvature);
-        //void obstacle_avoid();
-        //void curtain_avoid();
-        //float estimate_turn_radius(float sensor_reading);
-
+        
+        void obstacle_avoid();
+        void curtain_avoid();
 
     private:
         ControlLoop control_loop;

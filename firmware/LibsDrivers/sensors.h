@@ -82,6 +82,8 @@ class Sensors
     public:
         float front_left_proximity, left_proximity, right_proximity, front_right_proximity;
 
+        float obstacle_distance;
+
         int obstacle_detected;
 
     public:
