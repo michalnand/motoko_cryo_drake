@@ -2,8 +2,12 @@
 #define _POSITION_CONTROLLER_H_
 
 #include <tmath.h>
+
 #include <mpc.h>
 #include <mpc_config.h>
+
+//#include <lqri.h>
+//#include <lqr_config.h>
 
 
 class PositionController
@@ -16,6 +20,7 @@ class PositionController
         
     private:
         MPC<MPC_SYSTEM_ORDER, MPC_SYSTEM_INPUTS, MPC_PREDCTION_HORIZON> controller;
+        //LQRI<LQR_SYSTEM_ORDER, LQR_SYSTEM_INPUTS> controller;   
 
 };
 

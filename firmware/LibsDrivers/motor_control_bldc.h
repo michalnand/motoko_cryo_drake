@@ -35,16 +35,16 @@ class MotorControl
 
     public:
         void callback();
-        void set_torque_from_rotation(int32_t torque, uint32_t rotor_angle, bool brake, int motor_id);
+        void set_torque_from_rotation(int32_t torque, uint32_t rotor_angle,  int motor_id);
 
     private:
         void timer_init();
 
-    private: 
-        AS5600T<10, 11, 10,  'C', 'C'> right_encoder;    
-        AS5600T<12, 13, 10, 'B', 'B'> left_encoder;
+    private:    
+        AS5600T<10, 11, 12,  'C', 'C'> right_encoder;    
+        AS5600T<12, 13, 12, 'B', 'B'> left_encoder;
         
-        
+
         PWMRightThreePhase right_pwm;
         PWMLeftThreePhase  left_pwm;
 

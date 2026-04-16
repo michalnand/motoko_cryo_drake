@@ -6,7 +6,7 @@ void motor_foc_test()
         Gpio<'B', 0, GPIO_MODE_OUT> led_0;
 
         uint32_t state = 0;
-        float torque_max = 0.5;
+        float torque_max = 0.7;
         float torque   = 0.0;
         float ramp_up  = 0.01;
         float ramp_down =  0.1;
@@ -39,8 +39,8 @@ void motor_foc_test()
                 }
             }   
             
-            motor_control.set_left_torque(torque);  
-            motor_control.set_right_torque(torque);
+            motor_control.set_left_torque(-torque);  
+            motor_control.set_right_torque(-torque);
 
             terminal << "steps : " << (m_curr - m_prev) * 10 << "\n";
             terminal << "left_position_degrees: " << motor_control.get_left_position()*180/PI << "\n";

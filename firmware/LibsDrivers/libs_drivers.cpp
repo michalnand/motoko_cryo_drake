@@ -45,6 +45,7 @@ void LibsDriversInit()
         }   
     }
 
+    
     // motor control init, FOC control, encoders
     init_res = motor_control.init(0.8f);    
 
@@ -80,6 +81,7 @@ void LibsDriversInit()
 
     turbine_init();
     
+
     timer.delay_ms(500);
 
     led.all_off();

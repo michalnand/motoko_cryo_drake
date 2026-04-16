@@ -52,11 +52,17 @@ int MotorControl::init(float k)
     right_pwm.init();
     left_pwm.init();    
 
-    // set motors to zero position      
-    set_torque_from_rotation(PWM_VALUE_MAX/2, 0, true, 0);
-    set_torque_from_rotation(PWM_VALUE_MAX/2, 0, true, 1);
+    // set motors to zero position 
+    for (unsigned int i = 0; i < 10; i++)     
+    {
+        int32_t torque = (PWM_VALUE_MAX*i)/10;
+        set_torque_from_rotation(torque, (90*(int32_t)ENCODER_RESOLUTION)/360, 0);
+        set_torque_from_rotation(torque, (90*(int32_t)ENCODER_RESOLUTION)/360, 1);
+        timer.delay_ms(4);
+    }
+
     
-    timer.delay_ms(300);    
+    timer.delay_ms(500);       
 
     // calibrate encoders   
     int right_init_res = right_encoder.init();   
@@ -64,8 +70,8 @@ int MotorControl::init(float k)
 
     
     // release motors   
-    set_torque_from_rotation(0, 0, true, 0);
-    set_torque_from_rotation(0, 0, true, 1);
+    set_torque_from_rotation(0, 0, 0);
+    set_torque_from_rotation(0, 0, 1);
 
     timer.delay_ms(100);
 
@@ -120,8 +126,8 @@ void MotorControl::set(float forward, float turn)
 // force break to both motors
 void MotorControl::halt()
 {
-    set_torque_from_rotation(0, 0, false, 0);
-    set_torque_from_rotation(0, 0, false, 1);
+    set_torque_from_rotation(0, 0, 0);
+    set_torque_from_rotation(0, 0, 1);
 }
 
 float MotorControl::get_right_position()
@@ -159,10 +165,10 @@ void MotorControl::callback()
 
     // scale -1...1 range into -PWM_VALUE_MAX .. PWM_VALUE_MAX
     // send torques to motors   
-    set_torque_from_rotation(this->right_torque_s*PWM_VALUE_MAX, right_encoder.angle, false, 1);
-    set_torque_from_rotation(-this->left_torque_s*PWM_VALUE_MAX, left_encoder.angle,  false, 0);
+    set_torque_from_rotation(this->right_torque_s*PWM_VALUE_MAX, right_encoder.angle, 1);
+    set_torque_from_rotation(-this->left_torque_s*PWM_VALUE_MAX, left_encoder.angle, 0);
     
-
+        
     this->steps++;  
 }
 
@@ -207,19 +213,15 @@ void MotorControl::timer_init()
 
 
 
-void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle, bool brake, int motor_id)
+void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle, int motor_id)
 {
     torque = clip(torque, -(int32_t)PWM_VALUE_MAX, (int32_t)PWM_VALUE_MAX);
 
     // convert mechanical angle to electrical angle and index into sine table
     uint32_t table_angle = (rotor_angle*MOTOR_POLES*SINE_TABLE_SIZE)/(2*ENCODER_RESOLUTION);
 
-    if (brake)
-    {
-        rotor_angle = 0;
-        table_angle = 0;
-    }  
-    else if (torque >= 0)
+    
+    if (torque >= 0)
     {   
         table_angle = (table_angle - (3*SINE_TABLE_SIZE)/4) % SINE_TABLE_SIZE;
     }
@@ -229,7 +231,7 @@ void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle
         table_angle = (table_angle + (3*SINE_TABLE_SIZE)/4) % SINE_TABLE_SIZE;
     }    
 
-    
+
 
     // produce 3-phase shifted angles
     uint32_t angle_a = table_angle % SINE_TABLE_SIZE;
@@ -255,7 +257,7 @@ void MotorControl::set_torque_from_rotation(int32_t torque, uint32_t rotor_angle
 
     if (motor_id == 0)      
     {
-        left_pwm.set(pwm_b, pwm_a, pwm_c);
+        left_pwm.set(pwm_c, pwm_b, pwm_a);
     }   
     else         
     {

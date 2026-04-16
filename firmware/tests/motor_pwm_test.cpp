@@ -23,12 +23,12 @@ void motor_pwm_test()
         uint32_t pwm_b      = (PWM_VALUE_MAX*sine_table[phase_b])/SINE_VALUE_MAX;
         uint32_t pwm_c      = (PWM_VALUE_MAX*sine_table[phase_c])/SINE_VALUE_MAX;
 
-        left_pwm.set(0.1*pwm_a, 0.1*pwm_b, 0.1*pwm_c);  
-        right_pwm.set(0.1*pwm_a, 0.1*pwm_b, 0.1*pwm_c);   
+        left_pwm.set(0.2*pwm_a, 0.2*pwm_b, 0.2*pwm_c);  
+        right_pwm.set(0.2*pwm_a, 0.2*pwm_b, 0.2*pwm_c);   
 
         phase+= 7;           
 
-        timer.delay_ms(5);
+        timer.delay_ms(2);
 
         if ((phase%10) == 0)
         {

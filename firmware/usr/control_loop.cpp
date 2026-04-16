@@ -44,8 +44,6 @@ int ControlLoop::init()
     
     this->position_mode = true;
 
-    
-
     position_controller.init();
 
     
@@ -138,7 +136,7 @@ void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, 
     float a_new = a + w_req*dt;
 
     position_controller.set_xr_constant(x_new, a_new);
-}   
+}       
 
 
 
@@ -165,6 +163,7 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
 
     float r_req_safe = sgn(r_req)*max(abs(r_req), 0.01f);
 
+    
     for (unsigned int n = 0; n < MPC_PREDCTION_HORIZON; n++)
     {
         // update velocity with acceleration, and constrains
@@ -182,6 +181,24 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
         // fill controller predictive trajectory with calculated motion change
         this->position_controller.set_xr_trajectory(n, req_x, req_angle);
     }
+    
+
+    /*
+    // update velocity with acceleration, and constrains
+    v_curr+= acc_req*dt;
+    v_curr = clip(v_curr, -abs(v_req), abs(v_req)); 
+
+    //split velocity to tangential and angular components
+    float vc = v_curr;  
+    float va = v_curr/r_req_safe;    
+    
+    // calculate motion change
+    req_x+= vc*dt;
+    req_angle+= va*dt;      
+
+    // fill controller predictive trajectory with calculated motion change
+    this->position_controller.set_xr_constant(req_x, req_angle);
+    */
 }
 
 float ControlLoop::get_distance()
