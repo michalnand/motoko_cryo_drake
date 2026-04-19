@@ -61,7 +61,7 @@ void robot_identification()
     float x_velocity[NUM_SAMPLES];
     float x_omega[NUM_SAMPLES];
 
-    // bang-bang state: +1 or -1
+    // bang-bang state: +1 or -1    
     float forward_sign = 0.0f;
     float turn_sign    = 0.0f;
 
@@ -73,7 +73,7 @@ void robot_identification()
     shaper_distance.init(0.7f);
     shaper_angle.init(0.7f);  
     
-    turbine_on();
+    //turbine_on(); 
 
     for (unsigned int n = 0; n < NUM_SAMPLES; n++)
     {
@@ -138,17 +138,17 @@ void robot_identification()
         // the both motions are square wave like pattern with sweeping frequency
         // the switch of direction is when given distance travelled, or angle rotated
         // motions have zero mean value - basically it is simple bang bang control with sweeping frequency
-        float u_forward_ = shaper_distance.step(forward_sign * 0.3f); 
-        float u_turn_    = shaper_angle.step(turn_sign * 0.6f);         
+        float u_forward_ = shaper_distance.step(forward_sign * 0.2f); 
+        float u_turn_    = shaper_angle.step(turn_sign * 0.2f);         
 
         float u_right = u_forward_ + u_turn_; 
         float u_left  = u_forward_ - u_turn_;
 
-        //motor_control.set_right_velocity(u_right * MOTOR_CONTROL_MAX_VELOCITY);
-        //motor_control.set_left_velocity(u_left   * MOTOR_CONTROL_MAX_VELOCITY);
+        motor_control.set_right_velocity(u_right);
+        motor_control.set_left_velocity(u_left);
 
-        motor_control.set_right_torque(u_right);
-        motor_control.set_left_torque(u_left);   
+        //motor_control.set_right_torque(u_right);
+        //motor_control.set_left_torque(u_left);   
         
         u_forward[n] = u_forward_;
         u_turn[n]    = u_turn_;     
@@ -178,12 +178,12 @@ void robot_identification()
         {
             timer.delay_ms(time_wait);
         }
-    }
+    }   
 
     motor_control.set_left_torque(0);   
     motor_control.set_right_torque(0);
 
-    turbine_off();
+    //turbine_off();
     
     timer.delay_ms(200);     
     

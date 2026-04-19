@@ -41,14 +41,14 @@ void PositionController::callback()
 
 
     // controller step 
-    controller.step();          
+    //controller.step();          
+    controller.step_direct();   
         
     // control outputs convert to robot control inputs
     float u_forward = controller.u[0];
     float u_turn    = controller.u[1];   
 
     
-    // TODO constrains
     // constrains, turning have priority over forward
 
     // clamp turning first (priority)
@@ -56,14 +56,17 @@ void PositionController::callback()
 
     // limit forward based on turning   
     float max_u_forward =  1.0f - abs(u_turn);
-    float min_u_forward = -1.0f + abs(u_turn);
+    float min_u_forward = -1.0f + abs(u_turn);  
 
     u_forward = clip(u_forward, min_u_forward, max_u_forward);
-
+    
     // motor commands
     float right_u = u_forward + u_turn;         
     float left_u  = u_forward - u_turn;
     
-    motor_control.set_right_torque(right_u);
-    motor_control.set_left_torque(left_u);
+    //motor_control.set_right_torque(right_u);
+    //motor_control.set_left_torque(left_u);
+
+    motor_control.set_right_velocity(right_u);
+    motor_control.set_left_velocity(left_u);
 }

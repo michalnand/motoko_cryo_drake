@@ -4,6 +4,8 @@
 #include <as5600_t.h>
 #include <state_estimator.h>
 #include <median_filter.h>
+#include <lqg_single.h>
+
 
 // 2000rpm max speed, convert to rad/s
 #define MOTOR_CONTROL_MAX_VELOCITY  ((float)2000.0*2.0*PI/60.0)
@@ -14,6 +16,8 @@
 
 #define SG_WINDOW_SIZE 11
 
+
+
 class MotorControl
 {
 
@@ -22,6 +26,9 @@ class MotorControl
 
         void set_right_torque(float right_torque);
         void set_left_torque(float left_torque);
+
+        void set_left_velocity(float left_velocity);
+        void set_right_velocity(float right_velocity);
 
         void set(float forward, float turn);
 
@@ -48,11 +55,18 @@ class MotorControl
         PWMRightThreePhase right_pwm;
         PWMLeftThreePhase  left_pwm;
 
+        LQGSingle left_controller, right_controller;
+
+        bool  left_cl_mode, right_cl_mode;
+
     public:
         uint32_t steps;
         
         float k;
+
         float right_torque, left_torque;
+        float right_velocity, left_velocity;
+
         float right_torque_s, left_torque_s;
         float right_position, left_position;
 

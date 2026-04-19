@@ -40,12 +40,24 @@ int MotorControl::init(float k)
 
     this->steps = 0;
 
+    this->right_position = 0;
+    this->left_position  = 0;
+
+
     this->right_torque        = 0;
     this->left_torque         = 0;
+
+    this->right_velocity = 0;
+    this->left_velocity  = 0;
+
 
     this->right_torque_s = 0;
     this->left_torque_s  = 0;
 
+    this->left_cl_mode = false;
+    this->right_cl_mode = false;
+
+  
     this->k = k;
     
     
@@ -85,6 +97,27 @@ int MotorControl::init(float k)
     state.init(pos_cutoff_freq, vel_cutoff_freq, 1.0f/MOTOR_TIMER_FREQ);
 
 
+    // LQR + kalman init
+    {
+        float a =  0.93395853;
+        float b =  11.47450799; 
+
+        /*
+        float k  =  0.00365991;
+        float ki =  0.00030965;
+        float f  =  0.08042387;
+        */  
+
+        float k  =  0.00064245;
+        float ki =  4.45568037e-05;
+        float f  =  0.08042387; 
+
+        right_controller.init(a, b, k, ki, f, 1.0);
+        left_controller.init(a, b, k, ki, f, 1.0);
+    }
+
+
+
     //init timer  
     timer_init();
 
@@ -105,14 +138,33 @@ int MotorControl::init(float k)
 // range : -1, 1, for min and max torque
 void  MotorControl::set_right_torque(float right_torque)
 {
+    this->right_cl_mode = false;
     this->right_torque  = right_torque;
+    
 }
 
 // range : -1, 1, for min and max torque
 void MotorControl::set_left_torque(float left_torque)
 {
+    this->left_cl_mode = false;
     this->left_torque   = left_torque;
 }
+
+
+// range : -1, 1, for min and max torque
+void  MotorControl::set_right_velocity(float right_velocity)
+{
+    this->right_cl_mode = true;
+    this->right_velocity  = right_velocity*MOTOR_CONTROL_MAX_VELOCITY;
+    
+}
+
+// range : -1, 1, for min and max torque
+void MotorControl::set_left_velocity(float left_velocity)
+{
+    this->left_cl_mode = true;
+    this->left_velocity   = left_velocity*MOTOR_CONTROL_MAX_VELOCITY;
+}   
 
 void MotorControl::set(float forward, float turn)
 {
@@ -149,6 +201,12 @@ void MotorControl::callback()
     // update wheels state, position to radians
     float right_position        = (2.0f*PI*right_encoder.position)/ENCODER_RESOLUTION;
     float left_position         = -(2.0f*PI*left_encoder.position)/ENCODER_RESOLUTION;
+
+    float right_velocity        = (right_position - this->right_position)/(1.0f/MOTOR_TIMER_FREQ);
+    float left_velocity         = (left_position - this->left_position)/(1.0f/MOTOR_TIMER_FREQ);
+
+    this->right_position = right_position;
+    this->left_position  = left_position;
     
       
     // linear distance : average wheels traveled distance, convert radians to distance in meters
@@ -160,8 +218,26 @@ void MotorControl::callback()
     // update state estimator, holds smooth robot state
     state.step(distance, theta);     
 
-    this->right_torque_s = this->k*this->right_torque_s + (1.0f - this->k)*this->right_torque;
-    this->left_torque_s  = this->k*this->left_torque_s  + (1.0f - this->k)*this->left_torque;
+    if (this->right_cl_mode)
+    {
+        this->right_torque_s = right_controller.step(this->right_velocity, right_velocity);
+    }
+    else
+    {
+        this->right_torque_s = this->k*this->right_torque_s + (1.0f - this->k)*this->right_torque;
+        right_controller.kalman_step(right_velocity, this->right_torque_s);
+
+    }
+
+    if (this->left_cl_mode)
+    {
+        this->left_torque_s = left_controller.step(this->left_velocity, left_velocity);
+    }
+    else
+    {
+        this->left_torque_s = this->k*this->left_torque_s + (1.0f - this->k)*this->left_torque;
+        left_controller.kalman_step(left_velocity, this->left_torque_s);
+    }
 
     // scale -1...1 range into -PWM_VALUE_MAX .. PWM_VALUE_MAX
     // send torques to motors   

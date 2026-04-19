@@ -108,6 +108,7 @@ void ControlLoop::callback()
 }
 
 
+/*
 void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, float acc_max, float acc_w_max)
 {
     // obtain time interval
@@ -137,6 +138,44 @@ void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, 
 
     position_controller.set_xr_constant(x_new, a_new);
 }       
+*/
+
+
+void ControlLoop::planner_set_position(float x_req, float a_req, float acc_min, float acc_max, float acc_w_max)
+{
+    // obtain time interval
+    float dt = 1.0f/(float)CONTROLLER_UPDATE_RATE_HZ;
+
+    // obtain state
+    float x     = motor_control.state.x_dist_est;
+    float v     = motor_control.state.x_vel_est;
+    float a     = motor_control.state.x_theta_est;
+    float w     = motor_control.state.x_omega_est;
+
+    float x_new, a_new;
+    {
+        float err = x_req - x;
+
+        // max allowed position change this step
+        float dx_max = 1.0 * dt;    
+
+        // compute alpha so that:
+        // alpha * err <= dx_max
+        float alpha = abs(err) > 1e-2f ? min(1.0f, dx_max / abs(err)) : 1.0f;
+
+        alpha = clip(alpha, 0.1f, 1.0f);
+        x_new = (1.0f - alpha)*x + alpha*x_req;
+    }
+
+    {
+        float err   = a_req - a;    
+        float alpha = 1.0f/abs(0.1f*err);
+        alpha = clip(alpha, 0.1f, 1.0f);
+        a_new = (1.0f - alpha)*a + alpha*a_req;
+    }
+
+    position_controller.set_xr_constant(x_new, a_new);
+} 
 
 
 
@@ -150,6 +189,7 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
     float v     = motor_control.state.x_vel_est;
     float a     = motor_control.state.x_theta_est;
     float w     = motor_control.state.x_omega_est;
+
 
     // estimate required velocity change (acceleration)
     float acc_req = (v_req - v)/dt;
@@ -175,8 +215,8 @@ void ControlLoop::planner_set_circle_motion(float r_req, float v_req, float acc_
         float va = v_curr/r_req_safe;    
         
         // calculate motion change
-        req_x+= vc*dt;
-        req_angle+= va*dt;      
+        req_x+= vc*2.5f*dt;     
+        req_angle+= va*dt;         
 
         // fill controller predictive trajectory with calculated motion change
         this->position_controller.set_xr_trajectory(n, req_x, req_angle);

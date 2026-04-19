@@ -9,71 +9,59 @@ void LineFollower::init(uint32_t mode)
 
   if (mode == 0)
   {
-    // baseline, no turbine
     this->speed_min = 0.5f;          
-    this->speed_max = 1.0f;     
+    this->speed_max = 1.0f;      
 
-    this->kp_max    = 2.0f;   
-    this->kp_min    = 4.0f; 
+    this->kp_max    = 0.7f;   
+    this->kp_min    = 1.5f;  
 
-    this->kd_max    = 4.0f;
-    this->kd_min    = 4.0f;  
-  }
+    this->kd_max    = 5.0f; 
+    this->kd_min    = 5.0f; 
+  } 
   else if (mode == 1)
   { 
     // fast run, no turbine
     this->speed_min = 0.5f;          
-    this->speed_max = 1.2f;        
+    this->speed_max = 1.5f;      
 
-    this->kp_max    = 2.0f;     
-    this->kp_min    = 4.0f; 
+    this->kp_max    = 0.7f;   
+    this->kp_min    = 1.5f;  
 
-    this->kd_max    = 4.0f;
-    this->kd_min    = 4.0f;
+    this->kd_max    = 5.0f; 
+    this->kd_min    = 5.0f; 
   }
 
   else if (mode == 2)   
   { 
     // fast run, turbine
     this->speed_min = 0.6f;          
-    this->speed_max = 1.5f;        
+    this->speed_max = 1.8f;           
 
-    this->kp_max    = 1.0f;        
-    this->kp_min    = 3.0f;         
+    this->kp_max    = 0.7f;    
+    this->kp_min    = 1.8f;  
 
-    this->kd_max    = 4.0f;
-    this->kd_min    = 4.0f;
+    this->kd_max    = 5.0f;  
+    this->kd_min    = 5.0f;  
 
     this->turbine_enabled = true;
   }
 
-    /*  
-    // fast run, turbine turbo
-    this->speed_min = 0.6f;          
-    this->speed_max = 2.8f;          
 
-    this->kp_max    = 1.0f;     
-    this->kp_min    = 2.0f;   
+  this->position_prev = 0;
 
-    this->kd_max    = 4.0f;
-    this->kd_min    = 4.0f;
-    */
+  this->obstacle_idx = 0;
+  obstacle_map.set(false);
 
-    this->position_prev = 0;
-
-    this->obstacle_idx = 0;
-    obstacle_map.set(true);
-
-    /*
-    obstacle_map[0] = true;
-    obstacle_map[1] = false;
-    obstacle_map[2] = false;
-    obstacle_map[3] = true;
-    */
+  /*
+  obstacle_map[0] = true;
+  obstacle_map[1] = false;
+  obstacle_map[2] = false;
+  obstacle_map[3] = true;
+  */
 
 
-    // init main position control loop
-    control_loop.init();  
+  // init main position control loop
+  control_loop.init();  
 }
 
 void LineFollower::run()
@@ -86,7 +74,7 @@ void LineFollower::run()
       
     q_estimator.reset();
 
-   
+    
     while (1)   
     {
       // obstacle avoiding
@@ -145,7 +133,7 @@ void LineFollower::run()
       
 
       line_follow();  
-
+      
       //control_loop.set_circle_motion(1.0, 0.0f);
       //timer.delay_ms(DT_MS);
     }
@@ -219,7 +207,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
     float turn_search_distance      = 0.15f;  
     float forward_search_distance   = 0.07f;
 
-    float r_search  = 0.04f; 
+    float r_search  = 0.04f;   
     float r_max     = 1.0f;
 
     float speed     = 0.4f;
@@ -258,8 +246,8 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
     } 
 
     // always lost in middle the line
-    //state = 2;
-
+    // state = 2;
+  
 
     
     while (true)
@@ -267,18 +255,6 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
         // left or right line searching
         if (state == 0 || state == 1)
         {
-            /*
-            // stop motors
-            float d_target  = control_loop.get_distance();
-            float a_target  = control_loop.get_angle();
-
-            while (control_loop.get_velocity() > 0.01f)
-            { 
-                control_loop.set_position(d_target, a_target);
-                timer.delay_ms(DT_MS);      
-            }   
-            */  
-
             //turn until line found, or distance trehold
             float start_distance      = control_loop.get_distance();
             float target_distance     = start_distance + turn_search_distance;
@@ -304,7 +280,7 @@ void LineFollower::line_search(uint32_t line_lost_type, float curvature)
                 {
                   return;
                 }                
-            }     
+            }      
 
             way*= -1;
 

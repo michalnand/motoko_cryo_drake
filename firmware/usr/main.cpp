@@ -16,12 +16,15 @@ int main()
     terminal << "machine ready\n";
 
     
+    
     LineFollower line_follower;
-    line_follower.init(0);
+    line_follower.init(0);  
     key_wait();     
 
     line_follower.run();
-        
+
+
+
     //motor_foc_test();
 
     //sensors_test();
@@ -39,7 +42,6 @@ int main()
     ControlLoop control_loop;
     control_loop.init();
 
-    
     while (1) 
     {
         control_loop.set_position(0.0f, 0.0f*PI/180.0f);
@@ -66,5 +68,23 @@ int main()
     */
 
 
+    ControlLoop control_loop;
+    control_loop.init();
+
+    while (1)   
+    {
+        //control_loop.set_circle_motion(0.2f, 0.7f);
+        control_loop.set_turn_motion(1.0f, 0.7f);
+        timer.delay_ms(1000);      
+        
+        float turn_radius;
+
+        turn_radius = motor_control.state.x_vel_est/motor_control.state.x_omega_est;
+        
+        terminal << "velocity " << motor_control.state.x_vel_est << "\n";
+        terminal << "radius "   << turn_radius << "\n";
+        terminal << "\n\n"; 
+    }
+    
     return 0;
 }
