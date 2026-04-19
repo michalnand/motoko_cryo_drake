@@ -173,11 +173,11 @@ void Sensors::line_sensor_process()
     //solve if line lost
     if ((left_valid == false) && (right_valid == false))
     {
-        if (left_position_tmp < -0.4)   
+        if (left_position_tmp < -0.7f)     
         {
             line_lost_type = LINE_LOST_RIGHT;   
         }
-        else if (left_position_tmp > 0.4) 
+        else if (left_position_tmp > 0.7f) 
         {
             line_lost_type = LINE_LOST_LEFT;
         }

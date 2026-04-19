@@ -50,14 +50,14 @@ void LineFollower::init(uint32_t mode)
   this->position_prev = 0;
 
   this->obstacle_idx = 0;
-  obstacle_map.set(false);
+  obstacle_map.set(true);
 
-  /*
+  
   obstacle_map[0] = true;
   obstacle_map[1] = false;
   obstacle_map[2] = false;
   obstacle_map[3] = true;
-  */
+    
 
 
   // init main position control loop
