@@ -13,35 +13,47 @@ void LineFollower::init(uint32_t mode)
     this->speed_max = 1.0f;      
 
     this->kp_max    = 0.7f;   
-    this->kp_min    = 1.5f;  
+    this->kp_min    = 1.3f;  
 
-    this->kd_max    = 5.0f; 
-    this->kd_min    = 5.0f; 
+    this->kd_max    = 15.0f; 
+    this->kd_min    = 15.0f;   
   } 
   else if (mode == 1)
   { 
     // fast run, no turbine
     this->speed_min = 0.5f;          
-    this->speed_max = 1.5f;      
+    this->speed_max = 1.5f;       
 
     this->kp_max    = 0.7f;   
-    this->kp_min    = 1.5f;  
+    this->kp_min    = 1.3f;  
 
-    this->kd_max    = 5.0f; 
-    this->kd_min    = 5.0f; 
-  }
-
+    this->kd_max    = 15.0f; 
+    this->kd_min    = 15.0f; 
+  }   
   else if (mode == 2)   
   { 
+    // fastest run, without turbine
+    this->speed_min = 0.5f;          
+    this->speed_max = 2.0f;       
+
+    this->kp_max    = 0.5f;    
+    this->kp_min    = 1.3f;    
+
+    this->kd_max    = 25.0f;   
+    this->kd_min    = 25.0f;  
+  } 
+
+  else if (mode == 3)   
+  { 
     // fast run, turbine
-    this->speed_min = 0.6f;          
-    this->speed_max = 1.8f;           
+    this->speed_min = 0.7f;          
+    this->speed_max = 2.5f;       
 
-    this->kp_max    = 0.7f;    
-    this->kp_min    = 1.8f;  
+    this->kp_max    = 0.5f;      
+    this->kp_min    = 1.5f;         
 
-    this->kd_max    = 5.0f;  
-    this->kd_min    = 5.0f;  
+    this->kd_max    = 50.0f;    
+    this->kd_min    = 50.0f;   
 
     this->turbine_enabled = true;
   }
@@ -57,7 +69,7 @@ void LineFollower::init(uint32_t mode)
   obstacle_map[1] = false;
   obstacle_map[2] = false;
   obstacle_map[3] = true;
-    
+
 
 
   // init main position control loop
