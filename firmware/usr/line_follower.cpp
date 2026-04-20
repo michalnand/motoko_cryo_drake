@@ -356,14 +356,18 @@ void LineFollower::obstacle_avoid()
     float speed = speed_min;  
     float d_req = 0.5f;     
     
-    //float s_min = -0.8f;
-    //float s_max = 0.95f;   
-
+ 
+    // standing brick
+    /*
     float s_min = -0.85f;
     float s_max = 0.95f;   
+    float kp = 10.0f; 
+    */   
 
-
-    float kp = 5.0f;    
+    // side brick
+    float s_min = -0.8f;
+    float s_max = 0.95f;   
+    float kp = 10.0f; 
 
     terminal << "obstacle detected "<< sensors.obstacle_detected << "\n";
 
