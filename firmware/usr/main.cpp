@@ -18,7 +18,7 @@ int main()
     
     
     LineFollower line_follower;
-    line_follower.init(0);   
+    line_follower.init(1);   
     key_wait();        
 
     line_follower.run();

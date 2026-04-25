@@ -60,7 +60,7 @@ void LineFollower::init(uint32_t mode)
 
 
   this->position_prev = 0;
-
+  
   this->obstacle_idx = 0;
   obstacle_map.set(true);
 
@@ -85,6 +85,26 @@ void LineFollower::run()
 
       
     q_estimator.reset();
+
+    /*
+    while(1)
+    {
+      int obstacle = sensors.obstacle_detected;
+
+      if (obstacle == 1)
+      { 
+        led.on(LED::RIGHT_RED); 
+      }
+      else if (obstacle == 2)
+      {
+        led.on(LED::RIGHT_RED);
+        led.on(LED::LEFT_RED); 
+      }
+      else
+      {
+        led.all_off();
+      }
+      */
 
     
     while (1)   
@@ -358,16 +378,17 @@ void LineFollower::obstacle_avoid()
     
  
     // standing brick
-    /*
-    float s_min = -0.85f;
+    
+    float s_min = -0.83f;
     float s_max = 0.95f;   
     float kp = 10.0f; 
-    */   
-
+    
+    /*
     // side brick
     float s_min = -0.8f;
     float s_max = 0.95f;   
     float kp = 10.0f; 
+    */
 
     terminal << "obstacle detected "<< sensors.obstacle_detected << "\n";
 
@@ -438,13 +459,13 @@ void LineFollower::obstacle_avoid()
         control_loop.set_turn_motion(steering, speed);
         timer.delay_ms(DT_MS);      
       }   
-    }
+    } 
     
 
     //final turn left back to line, 90 degrees 
     {
       float distance_target = control_loop.get_distance();
-      float angle_target    = control_loop.get_angle() + 90.0*PI/180.0;
+      float angle_target    = control_loop.get_angle() + 100.0*PI/180.0;
 
       while (angle_target > control_loop.get_angle())
       {
